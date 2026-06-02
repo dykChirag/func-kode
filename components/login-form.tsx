@@ -2,10 +2,13 @@
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   const handleGithubLogin = async () => {
     const supabase = createClientComponentClient();
+
+    posthog.capture('login_attempt', { method: 'github' });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "github",
@@ -17,6 +20,7 @@ export function LoginForm() {
 
     if (error) {
       console.error("OAuth error:", error.message);
+      posthog.capture('login_failed', { method: 'github', error: error.message });
       return;
     }
 
