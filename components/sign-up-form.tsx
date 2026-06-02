@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 export function SignUpForm() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,8 @@ export function SignUpForm() {
       const nextParam = params.get("redirect") || params.get("next") || "/dashboard";
       const callback = `${origin}/auth/callback${nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
 
+      posthog.capture('signup_attempt', { method: 'github' });
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
@@ -35,6 +38,7 @@ export function SignUpForm() {
       if (error) {
         setErrorMsg("Could not start GitHub sign-in. Please try again.");
         setLoading(false);
+        posthog.capture('signup_failed', { method: 'github', error: error.message });
         return;
       }
       if (data?.url) {
