@@ -5,6 +5,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
+  const next = url.searchParams.get('next') || '/dashboard'
   const origin = url.origin
 
   console.log('=== AUTH CALLBACK START ===');
@@ -33,5 +34,5 @@ export async function GET(request: NextRequest) {
   });
 
   console.log('=== AUTH CALLBACK SUCCESS - REDIRECTING ===');
-  return NextResponse.redirect(`${origin}/dashboard`)
+  return NextResponse.redirect(`${origin}${next}`)
 }
