@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> **Status:** 🚧 Template — fill in as part of EPIC #92 completion
+> **Status:** 🚧 Partial — `SiteChrome` documented in [`site-chrome.md`](./site-chrome.md); other sections still TODO
 
 ---
 
@@ -27,7 +27,7 @@ func-kode/
 │   │   └── hero-editor-mockup.tsx
 │   ├── navbar.tsx          ← Global navbar (auth-aware)
 │   ├── footer.tsx          ← Global footer
-│   ├── site-chrome.tsx     ← Route-aware layout wrapper
+│   ├── site-chrome.tsx     ← Route-aware layout wrapper (see site-chrome.md)
 │   └── ui/                 ← Shared UI primitives
 ├── lib/                    ← Utilities and helpers
 ├── public/
