@@ -30,6 +30,7 @@ func-kode/
 │   ├── site-chrome.tsx     ← Route-aware layout wrapper (see site-chrome.md)
 │   └── ui/                 ← Shared UI primitives
 ├── lib/                    ← Utilities and helpers
+│   └── github-stats.ts     ← Cached GitHub repo stats (Navbar fork count)
 ├── public/
 │   └── landing/            ← Landing page static assets (SVGs, images)
 ├── docs/                   ← ← You are here

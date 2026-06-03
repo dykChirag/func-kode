@@ -1,6 +1,6 @@
 # API Route: /api/github-stats
 
-> **Status:** 🚧 Template — fill in as part of issue #94
+> **Status:** ✅ Implemented — issue [#94](https://github.com/patchid/func-kode/issues/94)
 
 ---
 
@@ -8,7 +8,7 @@
 
 Provides cached GitHub repository stats (fork count, star count) to the Navbar and any other UI that needs them — without making unauthenticated client-side calls to the GitHub API on every page load.
 
-> ⚠️ Unauthenticated GitHub API calls are rate-limited to **60 requests/hour per IP**. This route caches the response server-side to avoid hitting that limit.
+> ⚠️ Unauthenticated GitHub API calls are rate-limited to **60 requests/hour per IP**. This route and the shared `lib/github-stats.ts` helper cache the response server-side.
 
 ---
 
@@ -22,47 +22,80 @@ GET /api/github-stats
 
 ```json
 {
-  "forks": 42,
-  "stars": 128,
+  "forks": 7,
+  "stars": 9,
   "repo": "patchid/func-kode"
 }
 ```
 
+`forks` and `stars` may be `null` if the GitHub API is unreachable or rate-limited.
+
 ---
 
-## Caching Strategy
+## Implementation
 
-<!--TODO: document the chosen approach -->
-
-**Option A — Next.js Route Handler with ISR (recommended):**
 ```ts
 // app/api/github-stats/route.ts
-export const revalidate = 3600; // re-fetch from GitHub every 1 hour
+import { getGitHubStats } from "@/lib/github-stats";
+
+export const revalidate = 3600;
 
 export async function GET() {
-  const res = await fetch('https://api.github.com/repos/patchid/func-kode', {
-    headers: { Accept: 'application/vnd.github+json' },
-    next: { revalidate: 3600 },
-  });
-  const data = await res.json();
-  return Response.json({ forks: data.forks_count, stars: data.stargazers_count });
+  const stats = await getGitHubStats();
+  return Response.json(stats);
 }
 ```
 
-**Option B — Build-time static props (for Navbar in a server component):**
+Shared fetch logic lives in `lib/github-stats.ts`:
+
 ```ts
-// Fetch once at build time, baked into the page HTML
-const stats = await fetch('https://api.github.com/repos/patchid/func-kode').then(r => r.json());
+export async function getGitHubStats() {
+  const res = await fetch(`https://api.github.com/repos/patchid/func-kode`, {
+    headers: { Accept: "application/vnd.github+json" },
+    next: { revalidate: 3600 },
+  });
+  // returns { forks, stars, repo }
+}
 ```
+
+**Cache window:** 1 hour (`revalidate: 3600`).
 
 ---
 
 ## Usage in Navbar
 
-<!--TODO: document once #94 is implemented -->
+The Navbar does **not** call this route directly. Instead, `app/layout.tsx` fetches stats at request time and passes the fork count as a prop:
 
 ```tsx
-// The Navbar receives forkCount as a prop from its server component parent
-// It does NOT fetch this itself client-side
-<Navbar forkCount={stats.forks} />
+// app/layout.tsx (Server Component)
+const { forks: forkCount } = await getGitHubStats();
+
+<SiteChrome forkCount={forkCount}>
+  {children}
+</SiteChrome>
+
+// components/site-chrome.tsx
+<Navbar forkCount={forkCount} />
 ```
+
+Other components may call `GET /api/github-stats` if they need live stats without going through the layout.
+
+---
+
+## Files
+
+| File | Role |
+|---|---|
+| `app/api/github-stats/route.ts` | Public API route handler |
+| `lib/github-stats.ts` | Shared fetch + ISR cache config |
+| `app/layout.tsx` | Primary consumer (passes `forkCount` to Navbar) |
+
+---
+
+## Manual Verification
+
+```bash
+curl http://localhost:3000/api/github-stats
+```
+
+Expected: JSON with `forks`, `stars`, and `repo` fields. Repeat within 1 hour — response should be served from cache (no new GitHub API call per page load).

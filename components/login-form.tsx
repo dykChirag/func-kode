@@ -1,12 +1,12 @@
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import posthog from "posthog-js";
 
 export function LoginForm() {
   const handleGithubLogin = async () => {
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
 
     posthog.capture('login_attempt', { method: 'github' });
 

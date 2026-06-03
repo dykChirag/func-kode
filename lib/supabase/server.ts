@@ -1,7 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+type CookieStore = {
+  getAll: () => { name: string; value: string; options?: object }[];
+  set: (name: string, value: string, options?: object) => void;
+};
 
 // Helper to get the correct redirect URL for OAuth
 export function getOAuthRedirectPath(path: string = "/dashboard") {
@@ -11,7 +17,16 @@ export function getOAuthRedirectPath(path: string = "/dashboard") {
   return `${baseUrl.replace(/\/$/, "")}${path}`;
 }
 
-export const createClient = (cookieStore: { getAll: () => { name: string; value: string; options?: object }[]; set: (name: string, value: string, options?: object) => void; }) => {
+/** Server Supabase client with awaited Next.js 15+ cookies. */
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  return createClient({
+    getAll: () => cookieStore.getAll(),
+    set: (name, value, options) => cookieStore.set(name, value, options),
+  });
+}
+
+export const createClient = (cookieStore: CookieStore) => {
   return createServerClient(
     supabaseUrl!,
     supabaseKey!,
