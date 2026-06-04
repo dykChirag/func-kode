@@ -22,6 +22,7 @@ if (isPostHogLogsEnabled() && posthogKey) {
     resource: resourceFromAttributes({
       "service.name": POSTHOG_SERVICE_NAME,
     }),
+    // TODO: Switch to BatchLogRecordProcessor for production deployments
     processors: [new SimpleLogRecordProcessor(exporter)],
   });
 

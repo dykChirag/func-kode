@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { emitPosthogLog } from "@/lib/posthog-server-logger";
 
 function hasSupabaseAuthCookies(request: NextRequest): boolean {
+  // Supabase auth cookies follow the pattern: sb-<project-ref>-auth-token
   return request.cookies.getAll().some((cookie) => cookie.name.includes("auth-token"));
 }
 
@@ -25,8 +27,14 @@ export async function updateSession(request: NextRequest) {
 
   try {
     await supabase.auth.getSession();
-  } catch {
-    // Local Supabase down or stale session — drop cookies so refresh is not retried every request
+  } catch (error) {
+    console.warn("[middleware] Supabase session refresh failed, clearing auth cookies", error);
+    emitPosthogLog({
+      body: "Supabase session refresh failed in middleware",
+      attributes: {
+        pathname: request.nextUrl.pathname,
+      },
+    });
     clearSupabaseAuthCookies(request, response);
   }
 

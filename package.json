@@ -1,4 +1,5 @@
 {
+  "name": "func-kode",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
