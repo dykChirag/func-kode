@@ -10,8 +10,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { Navbar } from "@/components/navbar";
+import { useForkCount } from "@/components/site-chrome";
 
 export default function HomePage() {
+  const forkCount = useForkCount();
 
   // Comprehensive collection of developer tips
   const tips = [
@@ -90,7 +93,9 @@ export default function HomePage() {
   }, [tips.length]);
 
   return (
-    <main className="bg-gradient-to-br from-background via-background to-muted/20">
+    <>
+      <Navbar variant="landing" forkCount={forkCount} />
+      <main className="bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto container-mobile py-8 md:py-12 safe-bottom">
         {/* Hero Section */}
         <section className="w-full max-w-4xl mx-auto flex flex-col items-center text-center gap-6 md:gap-8 animate-scale-in">
@@ -252,5 +257,6 @@ export default function HomePage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

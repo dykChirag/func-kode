@@ -6,7 +6,7 @@
 
 ## Overview
 
-The `Navbar` (`components/navbar.tsx`) is the global navigation bar for func(kode). It matches the updated Figma landing design and is rendered on **every route** via `SiteChrome`.
+The `Navbar` (`components/navbar.tsx`) is the global navigation bar for func(kode). It matches the updated Figma landing design. **App routes** get it from `SiteChrome` (`variant="app"`). **`/`** renders it inside the page or `LandingPageContent` (`variant="landing"`) so `SiteChrome` does not duplicate it.
 
 Features:
 
@@ -22,17 +22,23 @@ Features:
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `forkCount` | `number \| null` | `null` | Live GitHub fork count, fetched server-side and passed from `app/layout.tsx` via `SiteChrome`. Never fetched client-side from `api.github.com`. |
+| `forkCount` | `number \| null` | `null` | Live GitHub fork count from `app/layout.tsx`. On `/`, omit and use `useForkCount()` from `SiteChrome` context. Never fetched client-side from `api.github.com`. |
+| `variant` | `"landing" \| "app"` | `"app"` | Nav link set — landing anchors vs app routes |
 
 ```tsx
-<Navbar forkCount={42} />
+// App route (via SiteChrome)
+<Navbar variant="app" forkCount={42} />
+
+// Landing route (page-owned)
+const forkCount = useForkCount();
+<Navbar variant="landing" forkCount={forkCount} />
 ```
 
 ---
 
 ## Nav Items
 
-All routes use the same landing-page anchor links:
+### `variant="landing"` (home / landing shell)
 
 | Label | href |
 |---|---|
@@ -42,7 +48,14 @@ All routes use the same landing-page anchor links:
 | For Developers | `/#for-developers` |
 | Contact Us | `/#contact-us` |
 
-> **Known limitation:** These are landing-page anchor links. On `/dashboard`, `/projects`, etc. they navigate back to `/#section` on the home page. Tracked for a follow-up — add a `variant` prop for app-level nav items before the full landing page ships. See [issue #TBD](https://github.com/patchid/func-kode/issues) (open after merge).
+### `variant="app"` (all other routes via `SiteChrome`)
+
+| Label | href |
+|---|---|
+| Home | `/` |
+| About Us | `/about` |
+| Projects | `/projects` |
+| Discord | `https://discord.gg/nnkA8xJ3JU` (new tab) |
 
 ---
 

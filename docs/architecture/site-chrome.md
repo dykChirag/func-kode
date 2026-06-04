@@ -6,15 +6,18 @@
 
 ## What Is It?
 
-`SiteChrome` (`components/site-chrome.tsx`) is a **client component** that wraps all page content in `app/layout.tsx`. It renders the global `<Navbar>` on every route and conditionally renders `<Footer>` on non-landing routes.
+`SiteChrome` (`components/site-chrome.tsx`) is a **client component** that wraps all page content in `app/layout.tsx`. It renders the global `<Navbar variant="app">` on non-landing routes, skips the global Navbar on `/` (so landing shells do not double-render it), and omits `<Footer>` on `/`.
 
 ```text
 app/layout.tsx (Server Component)
-  └── getGitHubStats()
+  └── getGitHubStatsSafe()
         └── <SiteChrome forkCount={forks}>
-              ├── <Navbar forkCount={forks}>   ← every route
-              ├── <main>{children}</main>
-              └── <Footer />                   ← all routes except /
+              ├── ForkCountContext (fork count for `/` landing Navbar)
+              ├── /  → {children} only (page or LandingPageContent owns Navbar)
+              └── other routes
+                    ├── <Navbar variant="app" forkCount={forks}>
+                    ├── <main>{children}</main>
+                    └── <Footer />
 ```
 
 ---
@@ -33,8 +36,9 @@ The root layout is a **Server Component** and cannot call `usePathname()`. `Site
 
 `SiteChrome` affects **every route** in the app. Reviewers should confirm:
 
-- Navbar renders on all routes including `/`
-- Footer is omitted on `/` (landing page will supply its own footer in a later PR)
+- Navbar on `/` is **not** rendered by `SiteChrome` (avoids duplicate chrome when `LandingPageContent` includes `<Navbar variant="landing" />`)
+- Interim `/` (`app/page.tsx`) renders one landing Navbar and reads `forkCount` via `useForkCount()`
+- Footer is omitted on `/` (landing footer comes in a later PR)
 - `forkCount` from the layout reaches the Navbar without client-side GitHub API calls
 
 ---
@@ -52,11 +56,11 @@ The root layout is a **Server Component** and cannot call `usePathname()`. `Site
 
 ```tsx
 // app/layout.tsx
-import { getGitHubStats } from "@/lib/github-stats";
+import { getGitHubStatsSafe } from "@/lib/github-stats";
 import { SiteChrome } from "@/components/site-chrome";
 
 export default async function RootLayout({ children }) {
-  const { forks: forkCount } = await getGitHubStats();
+  const { forks: forkCount } = await getGitHubStatsSafe();
 
   return (
     <html lang="en">
@@ -76,11 +80,11 @@ export default async function RootLayout({ children }) {
 
 ## Route Behaviour
 
-| Route | Global Navbar | Global Footer | Notes |
+| Route | Global Navbar (`SiteChrome`) | Global Footer | Notes |
 |---|---|---|---|
-| `/` | ✅ | ❌ | Landing footer comes from a later PR |
-| `/dashboard`, `/projects`, `/blog`, … | ✅ | ✅ | Same shell as before |
-| `/auth/login`, `/onboard`, … | ✅ | ✅ | Unchanged |
+| `/` | ❌ | ❌ | Page / `LandingPageContent` renders `<Navbar variant="landing" />`; use `useForkCount()` for fork count |
+| `/dashboard`, `/projects`, `/blog`, … | ✅ `variant="app"` | ✅ | App nav links (Home, About, Projects, Discord) |
+| `/auth/login`, `/onboard`, … | ✅ `variant="app"` | ✅ | Unchanged |
 
 ---
 
@@ -88,8 +92,8 @@ export default async function RootLayout({ children }) {
 
 After changing `SiteChrome` or `layout.tsx`, verify:
 
-1. **`/`** — Navbar visible; no global Footer in the DOM.
-2. **`/dashboard`** — Navbar + Footer visible; auth controls work.
+1. **`/`** — Exactly one Navbar (from page or landing shell); no global Footer; no second Navbar from `SiteChrome`.
+2. **`/dashboard`** — Navbar (`variant="app"`) + Footer visible; nav links are route paths, not `/#` anchors.
 3. **Network tab** — no client-side calls to `api.github.com` on page load.
 4. **Client navigation** — navigate `/dashboard` → `/` → `/dashboard`; Navbar persists; Footer appears/disappears.
 

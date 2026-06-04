@@ -30,16 +30,70 @@ import { GITHUB_REPO } from "@/lib/github-stats";
 const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
 const RELEASE_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
 
-const NAV_ITEMS = [
+type NavItem = {
+  label: string;
+  href: string;
+  external?: boolean;
+};
+
+const LANDING_NAV_ITEMS: readonly NavItem[] = [
   { label: "func(kode)", href: "/#func-kode" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Teams & Platforms", href: "/#for-teams" },
   { label: "For Developers", href: "/#for-developers" },
   { label: "Contact Us", href: "/#contact-us" },
-] as const;
+];
+
+const APP_NAV_ITEMS: readonly NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/about" },
+  { label: "Projects", href: "/projects" },
+  {
+    label: "Discord",
+    href: "https://discord.gg/nnkA8xJ3JU",
+    external: true,
+  },
+];
+
+const NAV_LINK_CLASS =
+  "shrink-0 whitespace-nowrap text-sm font-bold tracking-[-0.56px] text-white transition-opacity hover:opacity-80";
+
+const NAV_LINK_MOBILE_CLASS =
+  "flex min-h-[44px] items-center rounded-lg px-3 py-3 text-base font-bold tracking-[-0.56px] text-white transition-colors hover:bg-white/10";
+
+function NavLink({
+  item,
+  className,
+  onClick,
+}: {
+  item: NavItem;
+  className: string;
+  onClick?: () => void;
+}) {
+  if (item.external) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        onClick={onClick}
+      >
+        {item.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={item.href} className={className} onClick={onClick}>
+      {item.label}
+    </Link>
+  );
+}
 
 export type NavbarProps = {
   forkCount?: number | null;
+  variant?: "landing" | "app";
 };
 
 function getDisplayName(user: User) {
@@ -142,7 +196,8 @@ function UserMenuDropdown({
   );
 }
 
-export function Navbar({ forkCount = null }: NavbarProps) {
+export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
+  const navItems = variant === "landing" ? LANDING_NAV_ITEMS : APP_NAV_ITEMS;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -235,14 +290,12 @@ export function Navbar({ forkCount = null }: NavbarProps) {
             className="hidden min-w-0 items-center gap-4 overflow-hidden xl:flex xl:gap-6 2xl:gap-8"
             aria-label="Primary"
           >
-            {NAV_ITEMS.map(({ label, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="shrink-0 whitespace-nowrap text-sm font-bold tracking-[-0.56px] text-white transition-opacity hover:opacity-80"
-              >
-                {label}
-              </Link>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.label}
+                item={item}
+                className={NAV_LINK_CLASS}
+              />
             ))}
           </nav>
         </div>
@@ -302,15 +355,13 @@ export function Navbar({ forkCount = null }: NavbarProps) {
             </p>
           ) : null}
 
-          {NAV_ITEMS.map(({ label, href }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex min-h-[44px] items-center rounded-lg px-3 py-3 text-base font-bold tracking-[-0.56px] text-white transition-colors hover:bg-white/10"
+          {navItems.map((item) => (
+            <NavLink
+              key={item.label}
+              item={item}
+              className={NAV_LINK_MOBILE_CLASS}
               onClick={close}
-            >
-              {label}
-            </Link>
+            />
           ))}
 
           <GitHubForkButton
