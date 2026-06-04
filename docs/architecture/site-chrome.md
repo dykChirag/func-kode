@@ -1,19 +1,23 @@
 # SiteChrome — Global Layout Wrapper
 
-> **Status:** ✅ Implemented — issue [#93](https://github.com/patchid/func-kode/issues/93)
+> **Status:** ✅ Implemented — issue [#93](https://github.com/patchid/func-kode/issues/93), updated in [#94](https://github.com/patchid/func-kode/issues/94)
 
 ---
 
 ## What Is It?
 
-`SiteChrome` (`components/site-chrome.tsx`) is a **client component** that wraps all page content in `app/layout.tsx`. It reads the current route with `usePathname()` and decides whether to render the shared `<Navbar>` and `<Footer>` around `{children}`.
+`SiteChrome` (`components/site-chrome.tsx`) is a **client component** that wraps all page content in `app/layout.tsx`. It renders the global `<Navbar variant="app">` on non-landing routes, skips the global Navbar on `/` (so landing shells do not double-render it), and omits `<Footer>` on `/`.
 
 ```text
 app/layout.tsx (Server Component)
-  └── <Providers>
-        └── <SiteChrome>          ← client, route-aware
-              ├── "/"             → children only (no global chrome)
-              └── other routes    → Navbar + main + Footer
+  └── getGitHubStatsSafe()
+        └── <SiteChrome forkCount={forks}>
+              ├── ForkCountContext (fork count for `/` landing Navbar)
+              ├── /  → {children} only (page or LandingPageContent owns Navbar)
+              └── other routes
+                    ├── <Navbar variant="app" forkCount={forks}>
+                    ├── <main>{children}</main>
+                    └── <Footer />
 ```
 
 ---
@@ -22,51 +26,29 @@ app/layout.tsx (Server Component)
 
 ### The problem
 
-The landing page rebuild (EPIC [#92](https://github.com/patchid/func-kode/issues/92)) gives `/` its **own** navbar and footer inside a dedicated landing layout (`LandingPageContent`). The rest of the app (`/dashboard`, `/projects`, `/blog`, etc.) must keep the **existing** global `<Navbar>` and `<Footer>`.
+The root layout is a **Server Component** and cannot call `usePathname()`. `SiteChrome` is the minimal client boundary that:
 
-Before `SiteChrome`, both were wired directly in `app/layout.tsx`:
+- Keeps **one** root layout for metadata, fonts, and providers
+- Centralizes route-aware chrome rules in **one file**
+- Passes server-fetched props (e.g. `forkCount`) into client components
 
-```tsx
-<div className="min-h-screen flex flex-col">
-  <Navbar />
-  <main className="flex-1">{children}</main>
-  <Footer />
-</div>
-```
+### Blast radius
 
-That works for every route **except** `/`, where the global chrome would **stack on top of** the landing-specific chrome (double navbar, double footer).
+`SiteChrome` affects **every route** in the app. Reviewers should confirm:
 
-### Why `layout.tsx` alone is not enough
+- Navbar on `/` is **not** rendered by `SiteChrome` (avoids duplicate chrome when `LandingPageContent` includes `<Navbar variant="landing" />`)
+- Interim `/` (`app/page.tsx`) renders one landing Navbar and reads `forkCount` via `useForkCount()`
+- Footer is omitted on `/` (landing footer comes in a later PR)
+- `forkCount` from the layout reaches the Navbar without client-side GitHub API calls
 
-`app/layout.tsx` is a **Server Component**. It does not have access to the active pathname without either:
+---
 
-1. Passing route information from a child client boundary, or  
-2. Splitting layouts with nested `app/(marketing)/layout.tsx` route groups (a larger refactor).
+## Props
 
-`SiteChrome` is the minimal client boundary that:
-
-- Keeps **one** root layout for metadata, fonts, and providers  
-- Centralizes the “show global chrome or not” rule in **one file**  
-- Avoids copying `<Navbar />` + `<Footer />` into dozens of page files  
-
-### Alternatives considered
-
-| Approach | Why we did not use it (for this PR) |
-|---|---|
-| Duplicate Navbar/Footer on every non-landing page | High maintenance; easy to miss on new routes |
-| `if (pathname)` logic inside `layout.tsx` | Root layout cannot call `usePathname()` without a client child |
-| Route groups only (`(app)` / `(marketing)`) | Valid long-term; larger blast radius than issue #93 scope |
-| Landing page hides chrome with CSS | Still mounts auth/nav logic; hurts performance and a11y |
-
-### Blast radius (why this is its own PR)
-
-`SiteChrome` affects **every route** in the app, not only the landing page. A reviewer needs to confirm:
-
-- Non-landing routes still get Navbar + Footer unchanged  
-- `/` no longer receives global chrome (landing PRs will supply their own)  
-- Providers and `DebugConsoleProvider` order in `layout.tsx` stay the same  
-
-That is why this change was split out of [PR #91](https://github.com/patchid/func-kode/pull/91) and must merge **before** navbar, background, or hero landing PRs.
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `children` | `React.ReactNode` | — | Page content |
+| `forkCount` | `number \| null` | `null` | GitHub fork count from `app/layout.tsx` |
 
 ---
 
@@ -74,14 +56,17 @@ That is why this change was split out of [PR #91](https://github.com/patchid/fun
 
 ```tsx
 // app/layout.tsx
+import { getGitHubStatsSafe } from "@/lib/github-stats";
 import { SiteChrome } from "@/components/site-chrome";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }) {
+  const { forks: forkCount } = await getGitHubStatsSafe();
+
   return (
     <html lang="en">
       <body>
         <Providers>
-          <SiteChrome>{children}</SiteChrome>
+          <SiteChrome forkCount={forkCount}>{children}</SiteChrome>
         </Providers>
       </body>
     </html>
@@ -95,27 +80,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## Route Behaviour
 
-| Route | Global Navbar | Global Footer | Notes |
+| Route | Global Navbar (`SiteChrome`) | Global Footer | Notes |
 |---|---|---|---|
-| `/` | ❌ | ❌ | Landing chrome comes from later PRs (`LandingPageContent`) |
-| `/dashboard`, `/projects`, `/blog`, … | ✅ | ✅ | Same shell as before this PR |
-| `/auth/login`, `/onboard`, … | ✅ | ✅ | Unchanged |
-
----
-
-## Adding New Route Exceptions
-
-If another page must opt out of global chrome, extend the check in `components/site-chrome.tsx`:
-
-```tsx
-const CHROMELESS_PATHS = ["/", "/preview-landing"] as const;
-
-const isChromeless = CHROMELESS_PATHS.includes(
-  pathname as (typeof CHROMELESS_PATHS)[number]
-);
-```
-
-Prefer a small constant array over scattered `pathname ===` checks. If exceptions grow beyond 2–3 routes, consider a route-group layout instead.
+| `/` | ❌ | ❌ | Page / `LandingPageContent` renders `<Navbar variant="landing" />`; use `useForkCount()` for fork count |
+| `/dashboard`, `/projects`, `/blog`, … | ✅ `variant="app"` | ✅ | App nav links (Home, About, Projects, Discord) |
+| `/auth/login`, `/onboard`, … | ✅ `variant="app"` | ✅ | Unchanged |
 
 ---
 
@@ -123,11 +92,10 @@ Prefer a small constant array over scattered `pathname ===` checks. If exception
 
 After changing `SiteChrome` or `layout.tsx`, verify:
 
-1. **`/`** — no global Navbar or Footer in the DOM (view source or DevTools).  
-2. **`/dashboard`** — Navbar + Footer visible; auth controls still work.  
-3. **`/projects`** — same as dashboard.  
-4. **`/blog`** (or any content route) — same chrome as before.  
-5. **Client navigation** — navigate `/dashboard` → `/` → `/dashboard`; chrome should appear/disappear without a full reload.
+1. **`/`** — Exactly one Navbar (from page or landing shell); no global Footer; no second Navbar from `SiteChrome`.
+2. **`/dashboard`** — Navbar (`variant="app"`) + Footer visible; nav links are route paths, not `/#` anchors.
+3. **Network tab** — no client-side calls to `api.github.com` on page load.
+4. **Client navigation** — navigate `/dashboard` → `/` → `/dashboard`; Navbar persists; Footer appears/disappears.
 
 ---
 
@@ -135,8 +103,8 @@ After changing `SiteChrome` or `layout.tsx`, verify:
 
 | Item | Relationship |
 |---|---|
-| EPIC [#92](https://github.com/patchid/func-kode/issues/92) | Landing rebuild; depends on this PR merging first |
-| Issue [#94](https://github.com/patchid/func-kode/issues/94) | Navbar rewrite — must not change `SiteChrome` behaviour |
+| EPIC [#92](https://github.com/patchid/func-kode/issues/92) | Landing rebuild |
+| Issue [#94](https://github.com/patchid/func-kode/issues/94) | Navbar rewrite — passes `forkCount`, renders Navbar on `/` |
 | Issue [#96](https://github.com/patchid/func-kode/issues/96) | `LandingBackground` — only rendered on `/` |
 | Issue [#97](https://github.com/patchid/func-kode/issues/97) | `HeroSection` + `page.tsx` wiring |
 
@@ -147,6 +115,6 @@ After changing `SiteChrome` or `layout.tsx`, verify:
 | File | Role |
 |---|---|
 | `components/site-chrome.tsx` | Route-aware chrome wrapper |
-| `app/layout.tsx` | Root layout; delegates chrome to `SiteChrome` |
-| `components/navbar.tsx` | Unchanged in this PR — still used by `SiteChrome` on non-landing routes |
-| `components/footer.tsx` | Unchanged in this PR |
+| `app/layout.tsx` | Root layout; fetches stats, delegates chrome to `SiteChrome` |
+| `components/navbar.tsx` | Global navbar — see [`navbar.md`](../components/navbar.md) |
+| `components/footer.tsx` | Global footer (non-landing routes) |
