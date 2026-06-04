@@ -6,6 +6,12 @@ export type GitHubStats = {
   repo: string;
 };
 
+const FALLBACK_STATS: GitHubStats = {
+  forks: null,
+  stars: null,
+  repo: GITHUB_REPO,
+};
+
 export async function getGitHubStats(): Promise<GitHubStats> {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
@@ -24,6 +30,16 @@ export async function getGitHubStats(): Promise<GitHubStats> {
       repo: GITHUB_REPO,
     };
   } catch {
-    return { forks: null, stars: null, repo: GITHUB_REPO };
+    return FALLBACK_STATS;
   }
+}
+
+/** Non-blocking fetch with timeout — never delays root layout on slow GitHub API. */
+export async function getGitHubStatsSafe(timeoutMs = 500): Promise<GitHubStats> {
+  return Promise.race([
+    getGitHubStats(),
+    new Promise<GitHubStats>((resolve) =>
+      setTimeout(() => resolve(FALLBACK_STATS), timeoutMs)
+    ),
+  ]).catch(() => FALLBACK_STATS);
 }

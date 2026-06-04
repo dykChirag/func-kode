@@ -1,12 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+type CookieOptions = Partial<ResponseCookie>;
+
 type CookieStore = {
-  getAll: () => { name: string; value: string; options?: object }[];
-  set: (name: string, value: string, options?: object) => void;
+  getAll: () => { name: string; value: string }[];
+  set: (name: string, value: string, options?: CookieOptions) => void;
 };
 
 // Helper to get the correct redirect URL for OAuth
@@ -35,9 +38,11 @@ export const createClient = (cookieStore: CookieStore) => {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: object }[]) {
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
           } catch {
             // The `setAll` method was called from a Server Component.
           }

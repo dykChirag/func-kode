@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { SiteChrome } from "@/components/site-chrome";
 import { DebugConsoleProvider } from "@/components/debug-console-provider";
-import { getGitHubStats } from "@/lib/github-stats";
+import { getGitHubStatsSafe } from "@/lib/github-stats";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
   || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -77,7 +77,7 @@ const inter = Inter({
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const isDebugEnabled = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_DEBUG_CONSOLE === 'true';
-  const { forks: forkCount } = await getGitHubStats();
+  const { forks: forkCount } = await getGitHubStatsSafe();
 
   return (
     <html lang="en" suppressHydrationWarning>

@@ -42,6 +42,8 @@ All routes use the same landing-page anchor links:
 | For Developers | `/#for-developers` |
 | Contact Us | `/#contact-us` |
 
+> **Known limitation:** These are landing-page anchor links. On `/dashboard`, `/projects`, etc. they navigate back to `/#section` on the home page. Tracked for a follow-up — add a `variant` prop for app-level nav items before the full landing page ships. See [issue #TBD](https://github.com/patchid/func-kode/issues) (open after merge).
+
 ---
 
 ## Auth State
@@ -77,11 +79,11 @@ Display name priority: GitHub `@username` → full name → email prefix → `"U
 
 ## GitHub Fork Count
 
-**Strategy:** Server-side fetch in `app/layout.tsx` with ISR caching (`revalidate: 3600`).
+**Strategy:** Server-side fetch in `app/layout.tsx` via `getGitHubStatsSafe()` with ISR caching (`revalidate: 3600`) and a **500ms timeout** so a slow GitHub API never blocks the root layout on cold start.
 
 ```text
 app/layout.tsx (Server Component)
-  └── getGitHubStats()          ← lib/github-stats.ts, cached 1 hr
+  └── getGitHubStatsSafe()      ← lib/github-stats.ts, cached 1 hr, non-blocking
         └── <SiteChrome forkCount={forks}>
               └── <Navbar forkCount={forks}>
 ```
@@ -134,7 +136,7 @@ When scoring engine v1 ships, bump to `1.0.0` in `package.json`.
 
 | Asset | Path | Registry |
 |---|---|---|
-| Logo | `/public/landing/logo.png` | `LANDING_ASSETS.logo` in `components/landing/landing-assets.ts` |
+| Logo | `/public/landing/logo.png` | `LANDING_ASSETS.logo` in `lib/landing-assets.ts` |
 
 ---
 
@@ -145,7 +147,7 @@ When scoring engine v1 ships, bump to `1.0.0` in `package.json`.
 | `components/navbar.tsx` | Navbar UI + auth dropdown + mobile menu |
 | `lib/supabase/client.ts` | Browser Supabase client (`@supabase/ssr`) |
 | `app/auth/callback/route.ts` | OAuth callback — sets session cookies on redirect |
-| `components/landing/landing-assets.ts` | Logo path registry |
+| `lib/landing-assets.ts` | Shared landing asset registry (consolidated with PR #105) |
 | `components/site-chrome.tsx` | Passes `forkCount` to Navbar on every route |
 | `app/layout.tsx` | Fetches GitHub stats server-side |
 | `lib/github-stats.ts` | Shared GitHub stats fetch + cache |
@@ -169,5 +171,5 @@ When scoring engine v1 ships, bump to `1.0.0` in `package.json`.
 |---|---|
 | EPIC [#92](https://github.com/patchid/func-kode/issues/92) | Landing page rebuild |
 | Issue [#93](https://github.com/patchid/func-kode/issues/93) | `SiteChrome` — must be merged first |
-| Issue [#96](https://github.com/patchid/func-kode/issues/96) | `landing-assets.ts` will expand with background assets |
+| PR [#105](https://github.com/patchid/func-kode/pull/105) | Full `lib/landing-assets.ts` registry — consolidated in this branch |
 | Rejected PR [#91](https://github.com/patchid/func-kode/pull/91) | Original bundled PR this work was split from |

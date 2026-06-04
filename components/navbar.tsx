@@ -12,7 +12,7 @@ import {
   User as UserIcon,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LANDING_ASSETS } from "@/components/landing/landing-assets";
+import { LANDING_ASSETS } from "@/lib/landing-assets";
 import { GITHUB_REPO } from "@/lib/github-stats";
 
 const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
@@ -147,6 +147,7 @@ export function Navbar({ forkCount = null }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [needsOnboard, setNeedsOnboard] = useState(false);
+  const userIdRef = useRef<string | null>(null);
 
   const close = useCallback(() => setOpen(false), []);
   const profileHref = needsOnboard ? "/onboard" : "/profile";
@@ -163,7 +164,10 @@ export function Navbar({ forkCount = null }: NavbarProps) {
     const supabase = createClient();
 
     const loadUser = async (nextUser: User | null) => {
+      const nextId = nextUser?.id ?? null;
+      userIdRef.current = nextId;
       setUser(nextUser);
+
       if (!nextUser) {
         setNeedsOnboard(false);
         return;
@@ -180,7 +184,10 @@ export function Navbar({ forkCount = null }: NavbarProps) {
 
     supabase.auth.getUser().then(({ data }) => loadUser(data.user));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadUser(session?.user ?? null);
+      const nextUser = session?.user ?? null;
+      const nextId = nextUser?.id ?? null;
+      if (nextId === userIdRef.current) return;
+      loadUser(nextUser);
     });
 
     return () => {
