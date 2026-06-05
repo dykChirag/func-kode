@@ -38,8 +38,7 @@ function BgLayer({
       src={src}
       alt=""
       decoding="async"
-      // @ts-expect-error — fetchPriority is valid HTML but React types lag behind
-      fetchpriority="low"
+      fetchPriority="low"
       aria-hidden="true"
       className={`pointer-events-none absolute max-w-none select-none ${className}`}
     />
