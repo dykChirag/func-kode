@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
   console.log('Auth callback - URL:', url.href);
   console.log('Auth callback - Code:', code ? `present (${code.substring(0, 10)}...)` : 'missing');
 
-  // Handle missing code
   if (!code) {
     console.error('No authorization code received')
     return NextResponse.redirect(`${origin}/auth/login?error=no_code`)
