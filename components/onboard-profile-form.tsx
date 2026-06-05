@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import posthog from "posthog-js";
@@ -54,7 +54,7 @@ export default function OnboardProfileForm({
         has_skills: !!form.skills
       });
       
-      const supabase = createClientComponentClient();
+      const supabase = createClient();
       const { error: updateError } = await supabase
         .from("users")
         .update({

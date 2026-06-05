@@ -1,10 +1,13 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createServerSupabaseClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -13,7 +16,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login?redirect=/dashboard");
   }
 
-  // Fetch user profile
   const { data: userProfile } = await supabase
     .from("users")
     .select("is_onboarded")

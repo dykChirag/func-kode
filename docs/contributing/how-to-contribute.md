@@ -44,7 +44,7 @@ The app will be available at `http://localhost:3000`.
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | ✅ |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | ✅ |
 | `NEXT_PUBLIC_SITE_URL` | Full site URL (used for redirects) | ✅ |
-| `NEXT_PUBLIC_APP_VERSION` | App version shown in the Navbar | ⬜ Optional |
+| `NEXT_PUBLIC_APP_VERSION` | App version shown in the Navbar badge. Defaults to `package.json` `"version"` via `next.config.ts`. Bump `package.json` to release — no manual find-and-replace. | ⬜ Optional |
 
 ---
 
