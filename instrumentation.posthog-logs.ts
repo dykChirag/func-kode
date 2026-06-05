@@ -1,7 +1,7 @@
 import "@/lib/posthog-server-logger";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs";
+import { BatchLogRecordProcessor, LoggerProvider } from "@opentelemetry/sdk-logs";
 import {
   getPostHogOtlpLogsUrl,
   isPostHogLogsEnabled,
@@ -22,8 +22,7 @@ if (isPostHogLogsEnabled() && posthogKey) {
     resource: resourceFromAttributes({
       "service.name": POSTHOG_SERVICE_NAME,
     }),
-    // TODO: Switch to BatchLogRecordProcessor for production deployments
-    processors: [new SimpleLogRecordProcessor(exporter)],
+    processors: [new BatchLogRecordProcessor(exporter)],
   });
 
   globalThis.__posthogLogger = loggerProvider.getLogger(POSTHOG_SERVICE_NAME);

@@ -4,10 +4,6 @@ import {
   SeverityNumber,
 } from "@opentelemetry/api-logs";
 
-declare global {
-  var __posthogLogger: Logger | undefined;
-}
-
 export function getPosthogServerLogger(): Logger | undefined {
   return globalThis.__posthogLogger;
 }
