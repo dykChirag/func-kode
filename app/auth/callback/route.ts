@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const redirectUrl = new URL(next, request.url);
-  const response = NextResponse.redirect(redirectUrl);
+  const supabase = createRouteHandlerClient({ cookies })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
