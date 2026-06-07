@@ -18,11 +18,11 @@ docs/
 │   ├── design-tokens.md         ← Tailwind tokens & design system
 │   └── site-chrome.md           ← Global layout wrapper explained
 ├── components/
-│   ├── navbar.md                ← Navbar variants, auth, fork count
+│   ├── navbar.md                ← Navbar — auth, fork count, version badge ✅
 │   ├── landing-background.md   ← Background layer system
 │   └── hero-section.md         ← Hero layout & responsive behaviour
 └── api/
-    └── github-stats.md          ← /api/github-stats route
+    └── github-stats.md          ← /api/github-stats route ✅
 ```
 
 ---

@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { emitPosthogLog } from "@/lib/posthog-server-logger";
 
+type CookieOptions = Partial<ResponseCookie>;
+
 function hasSupabaseAuthCookies(request: NextRequest): boolean {
-  // Supabase auth cookies follow the pattern: sb-<project-ref>-auth-token
   return request.cookies.getAll().some((cookie) => cookie.name.includes("auth-token"));
 }
 
@@ -17,16 +18,35 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse):
 }
 
 export async function updateSession(request: NextRequest) {
-  const response = NextResponse.next();
+  let supabaseResponse = NextResponse.next({ request });
 
   if (!hasSupabaseAuthCookies(request)) {
-    return response;
+    return supabaseResponse;
   }
 
-  const supabase = createMiddlewareClient({ req: request, res: response });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
   try {
-    await supabase.auth.getSession();
+    await supabase.auth.getUser();
   } catch (error) {
     console.warn("[middleware] Supabase session refresh failed, clearing auth cookies", error);
     emitPosthogLog({
@@ -35,8 +55,8 @@ export async function updateSession(request: NextRequest) {
         pathname: request.nextUrl.pathname,
       },
     });
-    clearSupabaseAuthCookies(request, response);
+    clearSupabaseAuthCookies(request, supabaseResponse);
   }
 
-  return response;
+  return supabaseResponse;
 }

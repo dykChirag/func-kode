@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
     
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
