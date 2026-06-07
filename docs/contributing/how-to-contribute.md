@@ -44,7 +44,26 @@ The app will be available at `http://localhost:3000`.
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | ✅ |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | ✅ |
 | `NEXT_PUBLIC_SITE_URL` | Full site URL (used for redirects) | ✅ |
+| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog project API key for client analytics and server OTLP logs | ⬜ Optional |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog API host (cloud or self-hosted) | ⬜ Optional |
+| `POSTHOG_OTLP_LOGS_URL` | Optional override for OTLP log ingest (defaults from host: US/EU) | ⬜ Optional |
+| `POSTHOG_SERVICE_NAME` | Service name attached to OpenTelemetry log records | ⬜ Optional |
 | `NEXT_PUBLIC_APP_VERSION` | App version shown in the Navbar | ⬜ Optional |
+
+PostHog client analytics and server OTLP logs are disabled automatically in development, so no events or logs are sent while you work on the app.
+
+### Server logs (OpenTelemetry)
+
+`instrumentation.ts` registers an OTLP log exporter to PostHog on the Node.js runtime. Emit logs from API routes or server code with:
+
+```ts
+import { emitPosthogLog } from "@/lib/posthog-server-logger";
+
+emitPosthogLog({
+  body: "API route called",
+  attributes: { route: "/api/example" },
+});
+```
 
 ---
 
