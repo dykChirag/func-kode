@@ -56,8 +56,8 @@ export interface EventAnnouncementConfig {
 const DEFAULT_CONFIG: EventAnnouncementConfig = {
   enabled: true,
   eventName: "🎉 Server Launch Party",
-  eventDate: "Sunday — time TBD (IST)",
-  eventDateIso: undefined, // TODO: set to "2026-XX-XXT00:00:00+05:30"
+  eventDate: "Saturday, 13 June 2026 — 11:00 AM IST",
+  eventDateIso: "2026-06-13T12:30:00+05:30", // 11am start + 75min max duration
   eventDescription:
     "Join the func-kode Launch Party to kick off the community, meet other developers, explore the server, and hear what's coming next.",
   ctaLabel: "Join the Party 🚀",
