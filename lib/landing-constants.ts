@@ -7,8 +7,9 @@
  *   - These are raw pixel coordinates from the Figma canvas, NOT design tokens.
  *   - Do NOT use these as arbitrary Tailwind classes (e.g. w-[572px]).
  *   - Do NOT use these as CSS custom property values or min-h / max-h values.
- *   - Safe usage: inline styles (`style={{ left: HERO_MOCKUP_LEFT_PX }}`) for
- *     absolutely-positioned elements that must match the Figma canvas exactly.
+ *   - Safe usage: CSS custom property + `min-[1440px]:[left:var(--hero-mockup-left)]`
+ *     so the offset applies only when the element is absolutely positioned at 1440px+.
+ *     Do NOT set a bare inline `left` on a relatively positioned flex child (#135).
  *   - For responsive spacing that scales, prefer the Tailwind tokens in
  *     tailwind.config.ts (e.g. `px-landing-canvas`, `gap-landing-cta`).
  */
