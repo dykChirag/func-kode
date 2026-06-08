@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import posthog from "posthog-js";
 
 export default function OnboardProfileForm({
   initialProfile,
@@ -48,46 +47,27 @@ export default function OnboardProfileForm({
     
     try {
       console.log('Submitting onboarding form...');
-      posthog.capture('onboarding_started', { 
+      const supabase = createClientComponentClient();
+      const { error } = await supabase.from("users").update({
+        github_username: form.github_username,
+        display_name: form.display_name,
+        bio: form.bio,
+        skills: form.skills,
         role_preference: form.role_preference,
-        has_bio: !!form.bio,
-        has_skills: !!form.skills
-      });
-      
-      const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({
-          github_username: form.github_username,
-          display_name: form.display_name,
-          bio: form.bio,
-          skills: form.skills,
-          role_preference: form.role_preference,
-          interests: form.interests,
-          is_onboarded: true,
-        })
-        .eq("id", form.id)
-        .select();
+        interests: form.interests,
+        is_onboarded: true,
+      }).eq("id", form.id);
       
       setLoading(false);
-      if (updateError) {
-        console.error('Supabase update error:', updateError);
-        posthog.capture('onboarding_failed', { 
-          error: updateError.message || JSON.stringify(updateError)
-        });
-        setError(`Failed to update profile: ${updateError.message || 'Unknown error'}`);
+      if (error) {
+        console.error('Supabase update error:', error);
+        setError(`Failed to update profile: ${error.message}`);
         return;
       }
       console.log('Onboarding successful, redirecting...');
-      posthog.capture('onboarding_completed', { 
-        role_preference: form.role_preference
-      });
       router.push("/dashboard");
     } catch (err) {
       console.error('Unexpected error:', err);
-      posthog.capture('onboarding_error', { 
-        error: err instanceof Error ? err.message : 'Unknown error'
-      });
       setLoading(false);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
