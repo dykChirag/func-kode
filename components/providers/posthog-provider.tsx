@@ -9,13 +9,12 @@ import { PostHogPageview } from "@/components/providers/posthog-pageview";
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
-const analyticsEnabled = process.env.NODE_ENV !== "development" && Boolean(posthogKey);
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
   const trackedUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!analyticsEnabled || !posthogKey) {
+    if (!posthogKey) {
       return;
     }
 
@@ -60,7 +59,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  if (!analyticsEnabled || !posthogKey) {
+  if (!posthogKey) {
     return <>{children}</>;
   }
 

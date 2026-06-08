@@ -57,6 +57,8 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 | `LOGIN_ATTEMPTED` | `login_attempted` | Auth |
 | `LOGIN_SUCCEEDED` | `login_succeeded` | Auth |
 | `LOGIN_FAILED` | `login_failed` | Auth |
+| `SIGNUP_ATTEMPTED` | `signup_attempted` | Auth |
+| `SIGNUP_FAILED` | `signup_failed` | Auth |
 | `LOGOUT` | `logout` | Auth |
 | `ONBOARDING_STARTED` | `onboarding_started` | Auth |
 | `ONBOARDING_COMPLETED` | `onboarding_completed` | Auth |
@@ -72,4 +74,9 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 | `BLOG_COMMENTED` | `blog_commented` | Blog |
 | `DASHBOARD_VIEWED` | `dashboard_viewed` | Dashboard |
 
-Instrumented in this PR: `LOGIN_ATTEMPTED` in `components/login-form.tsx`. Remaining events are wired in follow-up issues (#111–#113).
+Instrumented in this PR:
+
+- `LOGIN_ATTEMPTED`, `LOGIN_FAILED` in `components/login-form.tsx`
+- `SIGNUP_ATTEMPTED`, `SIGNUP_FAILED` in `components/sign-up-form.tsx`
+
+Remaining events are wired in follow-up issues (#111–#113).

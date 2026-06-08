@@ -12,6 +12,8 @@ export const ANALYTICS_EVENTS = {
   LOGIN_ATTEMPTED: "login_attempted",
   LOGIN_SUCCEEDED: "login_succeeded",
   LOGIN_FAILED: "login_failed",
+  SIGNUP_ATTEMPTED: "signup_attempted",
+  SIGNUP_FAILED: "signup_failed",
   LOGOUT: "logout",
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_COMPLETED: "onboarding_completed",
