@@ -1,5 +1,3 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -12,7 +10,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login?redirect=/dashboard");
   }
 
-  // Fetch user profile
   const { data: userProfile } = await supabase
     .from("users")
     .select("is_onboarded")
