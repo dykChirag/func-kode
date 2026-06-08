@@ -1,5 +1,5 @@
 "use client";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { LoginForm } from "@/components/login-form";
 import Image from "next/image";
 import { useEffect, useState, Suspense } from "react";
@@ -37,7 +37,7 @@ function LoginContent() {
 
     // Check if user is already logged in
     const checkAuth = async () => {
-      const supabase = createClientComponentClient();
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {

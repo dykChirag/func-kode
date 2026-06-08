@@ -1,12 +1,12 @@
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export function LoginForm() {
   const handleGithubLogin = async () => {
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
 
     track(ANALYTICS_EVENTS.LOGIN_ATTEMPTED, { method: "github" });
 
@@ -20,6 +20,7 @@ export function LoginForm() {
 
     if (error) {
       console.error("OAuth error:", error.message);
+      track(ANALYTICS_EVENTS.LOGIN_FAILED, { method: "github", error: error.message });
       return;
     }
 
