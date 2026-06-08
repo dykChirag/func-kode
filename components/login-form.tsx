@@ -2,10 +2,13 @@
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export function LoginForm() {
   const handleGithubLogin = async () => {
     const supabase = createClientComponentClient();
+
+    track(ANALYTICS_EVENTS.LOGIN_ATTEMPTED, { method: "github" });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "github",
