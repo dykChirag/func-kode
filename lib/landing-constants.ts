@@ -46,3 +46,19 @@ export const HERO_MOCKUP_HEIGHT_PX = 590;
  * Use this constant only when you need the raw pixel value (e.g. JS calculations).
  */
 export const HERO_TEXT_LEFT_PX = 122;
+
+/**
+ * Figma full-page gradient color-stop Y positions (4727px artboard).
+ * Used as fixed px stops so purple stays at the about / how-it-works band
+ * regardless of actual page height (percentage stops shift on short pages).
+ */
+export const LANDING_GRADIENT_STOPS_PX = {
+  darkStart: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.04),    // 189px
+  purplePeak: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.35),     // 1654px
+  purpleHold: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.47),     // 2222px — how-it-works band
+  surfaceStart: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.64),   // 3025px
+  surfaceEnd: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.88),     // 4160px
+} as const;
+
+/** ProductLandingPage / Figma gradient — fixed px stops on 4727px artboard. */
+export const LANDING_PAGE_GRADIENT = `linear-gradient(180deg, #040710 ${LANDING_GRADIENT_STOPS_PX.darkStart}px, #7020BF ${LANDING_GRADIENT_STOPS_PX.purplePeak}px, #7020BF ${LANDING_GRADIENT_STOPS_PX.purpleHold}px, #111B34 ${LANDING_GRADIENT_STOPS_PX.surfaceStart}px, #111B34 ${LANDING_GRADIENT_STOPS_PX.surfaceEnd}px, #111B34 100%)`;
