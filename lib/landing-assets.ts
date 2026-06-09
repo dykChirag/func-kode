@@ -59,6 +59,17 @@ export const LANDING_ASSETS = {
 
   /** Illustration used in the "For Developers" section. */
   sectionDevelopersIllustration: "/landing/section-developers-illustration.svg",
+
+  // ── About section feature-card icons (ProductLandingPage / Figma) ─────────
+
+  /** GitHub-first onboarding card icon. */
+  featureGithubOnboarding: "/landing/feature-github-onboarding.svg",
+
+  /** Contribution tracking card icon. */
+  featureContributionTracking: "/landing/feature-contribution-tracking.svg",
+
+  /** Community collaboration card icon. */
+  featureCommunityCollaboration: "/landing/feature-community-collaboration.svg",
 } as const;
 
 export type LandingAssetKey = keyof typeof LANDING_ASSETS;
