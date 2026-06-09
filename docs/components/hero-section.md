@@ -57,17 +57,13 @@ All typography values come from design tokens defined in [`architecture/design-t
 ## Layout
 
 ```
-Mobile (< 1024px)
+Mobile through tablet / iPad (< 1440px)
   flex-col, centred
   [Label]
   [H1]
   [Body]
   [CTAs stacked → row at sm]
-  [HeroEditorMockup below]
-
-Desktop (>= 1024px / lg)
-  flex-row, px-landing-canvas (122px) each side
-  [Copy block left]   [HeroEditorMockup right, flex-1]
+  [HeroEditorMockup below, centred]
 
 1440px (Figma pixel-perfect)
   absolute positioning within max-w-[1440px] container
@@ -75,7 +71,9 @@ Desktop (>= 1024px / lg)
   Mockup: left = 572px  (HERO_MOCKUP_LEFT_PX — see lib/landing-constants.ts)
 ```
 
-The `572px` mockup offset is the only value not covered by a Tailwind token. It is documented in `lib/landing-constants.ts` as `HERO_MOCKUP_LEFT_PX` and used at `min-[1440px]:` only. Per issue #97 spec, pixel-perfect Figma positioning is acceptable at 1440px.
+There is **no** side-by-side flex row between 1024px and 1439px — that intermediate layout clipped the mockup on iPad and narrow desktop windows ([#135](https://github.com/patchid/func-kode/issues/135)).
+
+The `572px` mockup offset is the only value not covered by a Tailwind token. It is documented in `lib/landing-constants.ts` as `HERO_MOCKUP_LEFT_PX` and applied at `min-[1440px]:` only via `--hero-mockup-left` (not a always-on inline `left`, which clipped the mockup on viewports below 1440px — see [#135](https://github.com/patchid/func-kode/issues/135)). Per issue #97 spec, pixel-perfect Figma positioning is acceptable at 1440px.
 
 ---
 
