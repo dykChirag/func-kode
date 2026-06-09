@@ -73,10 +73,12 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 | `BLOG_LIKED` | `blog_liked` | Blog |
 | `BLOG_COMMENTED` | `blog_commented` | Blog |
 | `DASHBOARD_VIEWED` | `dashboard_viewed` | Dashboard |
+| `DASHBOARD_ACTION_CLICKED` | `dashboard_action_clicked` | Dashboard |
 
 Instrumented in this PR:
 
 - `LOGIN_ATTEMPTED`, `LOGIN_FAILED` in `components/login-form.tsx`
 - `SIGNUP_ATTEMPTED`, `SIGNUP_FAILED` in `components/sign-up-form.tsx`
+- `DASHBOARD_VIEWED`, `DASHBOARD_ACTION_CLICKED` in `app/dashboard/page.tsx`
 
 Remaining events are wired in follow-up issues (#111–#113).

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -47,7 +47,7 @@ export default function OnboardProfileForm({
     
     try {
       console.log('Submitting onboarding form...');
-      const supabase = createClientComponentClient();
+      const supabase = createClient();
       const { error } = await supabase.from("users").update({
         github_username: form.github_username,
         display_name: form.display_name,

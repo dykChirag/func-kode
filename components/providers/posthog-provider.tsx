@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 import { Suspense, useEffect, useRef } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogSdkProvider } from "posthog-js/react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { PostHogPageview } from "@/components/providers/posthog-pageview";
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
   const trackedUserId = useRef<string | null>(null);
@@ -29,7 +29,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       persistence: "memory",
     });
 
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
 
     const syncIdentity = (userId: string | null) => {
       if (!userId) {

@@ -32,6 +32,7 @@ export const ANALYTICS_EVENTS = {
   BLOG_COMMENTED: "blog_commented",
 
   DASHBOARD_VIEWED: "dashboard_viewed",
+  DASHBOARD_ACTION_CLICKED: "dashboard_action_clicked",
 } as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS];

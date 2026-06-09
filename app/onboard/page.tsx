@@ -1,14 +1,16 @@
 'use client'
 import Link from "next/link";
 
-import { useEffect, useState } from 'react';
-import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs';
+import { useEffect, useRef, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import OnboardProfileForm from "@/components/onboard-profile-form";
 import Image from 'next/image';
 
 export default function OnboardPage() {
-  const supabase = createClientComponentClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
