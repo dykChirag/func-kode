@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export default function OnboardProfileForm({
   initialProfile,
@@ -46,7 +47,12 @@ export default function OnboardProfileForm({
     setError(null);
     
     try {
-      console.log('Submitting onboarding form...');
+      track(ANALYTICS_EVENTS.ONBOARDING_STARTED, {
+        role_preference: form.role_preference,
+        has_bio: Boolean(form.bio),
+        has_skills: Boolean(form.skills),
+      });
+
       const supabase = createClient();
       const { error } = await supabase.from("users").update({
         github_username: form.github_username,
@@ -64,7 +70,9 @@ export default function OnboardProfileForm({
         setError(`Failed to update profile: ${error.message}`);
         return;
       }
-      console.log('Onboarding successful, redirecting...');
+      track(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+        role_preference: form.role_preference,
+      });
       router.push("/dashboard");
     } catch (err) {
       console.error('Unexpected error:', err);

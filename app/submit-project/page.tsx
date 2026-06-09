@@ -26,6 +26,24 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function getAuthorName(user: User) {
+    const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
+    if (githubUsername) {
+        return githubUsername;
+    }
+
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
+    if (fullName) {
+        return fullName;
+    }
+
+    if (user.email) {
+        return user.email.split('@')[0];
+    }
+
+    return 'User';
+}
+
 export default function SubmitProjectPage() {
     const router = useRouter();
     const supabaseRef = useRef(createClient());
@@ -58,28 +76,6 @@ export default function SubmitProjectPage() {
     // Helper function to safely handle string operations
     const safeString = (value: unknown): string => {
         return typeof value === 'string' ? value : '';
-    };
-
-    // Helper function to get display name for author
-    const getAuthorName = (user: User) => {
-        // Try to get GitHub username from user_metadata
-        const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
-        if (githubUsername) {
-            return githubUsername;
-        }
-        
-        // Try to get full name
-        const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
-        if (fullName) {
-            return fullName;
-        }
-        
-        // Fallback to email username (part before @)
-        if (user.email) {
-            return user.email.split('@')[0];
-        }
-        
-        return 'User';
     };
 
     const [formData, setFormData] = useState({

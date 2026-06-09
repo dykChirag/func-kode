@@ -5,22 +5,23 @@ import { Suspense, useEffect, useRef } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogSdkProvider } from "posthog-js/react";
 import { createClient } from "@/lib/supabase/client";
+import { markPostHogInitialized } from "@/lib/analytics";
 import { PostHogPageview } from "@/components/providers/posthog-pageview";
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+const analyticsEnabled = process.env.NODE_ENV !== "development" && Boolean(posthogKey);
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
   const trackedUserId = useRef<string | null>(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!posthogKey) {
+    if (!analyticsEnabled || !posthogKey || initialized.current) {
       return;
     }
 
-    if (posthog.__loaded) {
-      return;
-    }
+    initialized.current = true;
 
     posthog.init(posthogKey, {
       api_host: posthogHost,
@@ -28,6 +29,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       capture_pageleave: true,
       persistence: "memory",
     });
+    markPostHogInitialized();
 
     const supabase = createClient();
 
@@ -59,7 +61,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  if (!posthogKey) {
+  if (!analyticsEnabled || !posthogKey) {
     return <>{children}</>;
   }
 
