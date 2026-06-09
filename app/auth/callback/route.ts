@@ -5,7 +5,6 @@ function sanitizeNextPath(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
     return "/dashboard";
   }
-
   return next;
 }
 
@@ -18,6 +17,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login?error=no_code", request.url));
   }
 
+  // Initialize response BEFORE createServerClient so the setAll cookie
+  // adapter can write Set-Cookie headers onto it correctly.
   let response = NextResponse.redirect(new URL(next, request.url));
 
   const supabase = createServerClient(

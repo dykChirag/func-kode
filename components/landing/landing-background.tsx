@@ -1,4 +1,5 @@
 import { LANDING_ASSETS } from "@/lib/landing-assets";
+import { LANDING_PAGE_GRADIENT } from "@/lib/landing-constants";
 
 /**
  * Inline grain texture — SVG feTurbulence tiled at 128px.
@@ -9,13 +10,6 @@ const GRAIN_STYLE: React.CSSProperties = {
   backgroundRepeat: "repeat",
   backgroundSize: "128px 128px",
 } as const;
-
-/**
- * Full-page gradient — matches Figma spec exactly.
- * Uses color values from landing.* tokens (tailwind.config.ts).
- */
-const GRADIENT =
-  "linear-gradient(180deg, #040710 4%, #7020BF 35%, #111B34 64%, #111B34 88%)";
 
 /**
  * BgLayer — purely decorative SVG/image layer.
@@ -69,9 +63,9 @@ export function LandingBackground() {
       role="presentation"
     >
       {/* ── 1. Full-page gradient ───────────────────────────────────────────
-           Covers the entire page height regardless of content length.
-           No fixed height — grows with page naturally. */}
-      <div className="absolute inset-0" style={{ background: GRADIENT }} />
+           Fixed px stops from Figma 4727px canvas — purple peak at ~1654px
+           (about + how-it-works). Percentage stops shift purple away on short pages. */}
+      <div className="absolute inset-0" style={{ background: LANDING_PAGE_GRADIENT }} />
 
       {/* ── 2. Hero zone decorative layers ─────────────────────────────────
            Height = clamp(600px, 67.85vw, 977px).
@@ -162,30 +156,72 @@ export function LandingBackground() {
         />
       </div>
 
-      {/* ── 3. Grain overlay ────────────────────────────────────────────────
+      {/* ── 3. Mid / lower zone decorative layers ─────────────────────────────
+           Starts below the hero zone; grows with page content (no fixed 4727px).
+           Positions converted from Figma 1440×4727 canvas (mid zone origin = 977px).
+
+           bgMidFlowLines   Figma top=890px  → -2.32% of mid zone (bleeds into hero)
+           amber glow       Figma top=1488px → 13.63%
+           bgLowerTopo      Figma top=2402px → 38%
+           bgLowerSideLines Figma top=3485px → 66.88%
+      */}
+      <div
+        className="absolute inset-x-0 bottom-0 left-1/2 w-full max-w-[1440px] -translate-x-1/2"
+        style={{ top: "clamp(600px, 67.85vw, 977px)" }}
+      >
+        {/* Purple glow — about band (how-it-works uses page gradient only) */}
+        <div
+          className="absolute rounded-full border border-landing-teal/40 bg-landing-purple
+                     blur-[200px] max-lg:blur-[120px]"
+          style={{
+            left: "15%",
+            top: "5%",
+            width: "70%",
+            height: "28%",
+          }}
+        />
+
+        {/* Amber glow — centre-right, behind about */}
+        <div
+          className="absolute rounded-full blur-[200px] max-lg:blur-[120px]"
+          style={{
+            left: "23.96%",
+            top: "13.63%",
+            width: "59.17%",
+            height: "15.65%",
+            background: "rgba(244, 162, 89, 0.1)",
+          }}
+        />
+
+        {/* Flowing lines bridging hero → about → how-it-works */}
+        <BgLayer
+          src={LANDING_ASSETS.bgMidFlowLines}
+          className="top-[-5%] -left-[1%] w-[158%] min-h-[1100px] h-auto
+                     max-lg:top-[0%] max-lg:-left-[14%] max-lg:w-[120%] max-lg:min-h-[700px]"
+        />
+
+        {/* Large topography mesh — lower page only (avoid blue wash over purple section) */}
+        <BgLayer
+          src={LANDING_ASSETS.bgLowerTopography}
+          className="top-[55%] -left-[84%] w-[333%] min-h-[1400px] h-auto opacity-40
+                     max-lg:top-[50%] max-lg:-left-[55%] max-lg:w-[180%] max-lg:min-h-[900px]"
+        />
+
+        {/* Side accent lines — lower page, hidden on mobile */}
+        <BgLayer
+          src={LANDING_ASSETS.bgLowerSideLines}
+          className="top-[75%] -left-[40%] w-[58%] min-h-[700px] h-auto opacity-30
+                     max-lg:top-[70%] max-lg:-left-[20%] max-lg:w-[40%] max-lg:min-h-[450px] max-md:hidden"
+        />
+      </div>
+
+      {/* ── 4. Grain overlay ────────────────────────────────────────────────
            Full-page, tiled SVG noise at opacity-[0.04] mix-blend-overlay.
            Matches design spec exactly — do not adjust opacity. */}
       <div
         className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
         style={GRAIN_STYLE}
       />
-
-      {/*
-        ── Section background bands are NOT rendered here ───────────────────
-        Rationale (Option A from issue #96):
-          Each content section owns its own background band so vertical
-          position is determined by content flow, not a hardcoded top offset.
-
-        Pattern to use inside each section component:
-          <div className="relative">
-            <div className="absolute inset-x-0 inset-y-0 bg-black/25 -z-10" />
-            ... section content ...
-          </div>
-
-        Mid/lower decorative SVGs (bgMidFlowLines, bgLowerTopography,
-        bgLowerSideLines) and the amber glow orb will be added per-section
-        in subsequent PRs (#97+).
-      */}
     </div>
   );
 }
