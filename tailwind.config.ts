@@ -67,6 +67,8 @@ export default {
           border:  "#1C273A", // border / divider
           muted:   "#A1A7B7", // secondary text
           fg:      "#FCFCFC", // primary foreground text
+          step:    "#495AFF", // how-it-works stepper blue (ProductLandingPage)
+          "card-border": "#A1AEBF", // about feature card border
         },
       },
       borderRadius: {
@@ -94,8 +96,13 @@ export default {
       },
       spacing: {
         // Landing page spacing tokens
-        "landing-cta":    "47px",   // gap between CTA buttons
-        "landing-canvas": "122px",  // hero left padding (1440px canvas inset)
+        "landing-cta":         "47px",  // gap between CTA buttons
+        "landing-canvas":      "122px", // hero / section horizontal inset (1440px canvas)
+        "landing-section-y":   "80px",  // section vertical padding (mobile)
+        "landing-section-y-lg":"96px",  // section vertical padding (1440px canvas)
+        "landing-section-gap": "56px",  // gap between major blocks inside a section
+        "landing-card-gap":    "24px",  // gap between feature cards
+        "landing-step-gap":    "48px",  // gap between timeline steps
       },
     },
   },
