@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+// Requires RLS on profiles allowing SELECT where auth.uid() = id — see database/profiles.sql
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -11,13 +12,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login?redirect=/dashboard");
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("is_onboarded")
     .eq("id", user.id)
-    .maybeSingle();
+    .single();
 
-  if (error || !profile?.is_onboarded) {
+  if (profileError) {
+    // PGRST116 = no row yet (user has not onboarded)
+    if (profileError.code !== "PGRST116") {
+      console.error("[DashboardLayout] Failed to fetch profile:", profileError.message);
+    }
+    redirect("/onboard");
+  }
+
+  if (!profile.is_onboarded) {
     redirect("/onboard");
   }
 
