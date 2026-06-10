@@ -11,6 +11,10 @@ Product analytics for func(Kode) using [PostHog](https://posthog.com). All custo
 
 Add these to `.env.local` (never commit real keys). See `.env.example`.
 
+PostHog is **disabled in development** (`NODE_ENV === "development"`) — leave `NEXT_PUBLIC_POSTHOG_KEY` empty locally to avoid polluting production data.
+
+Set `NEXT_PUBLIC_POSTHOG_HOST` to match your project region: `https://eu.i.posthog.com` (EU) or `https://us.i.posthog.com` (US). A region mismatch silently drops events.
+
 ## Naming convention
 
 All event names follow **`noun_verb`** in `snake_case`, past tense where the action is complete.
@@ -62,6 +66,8 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 | `LOGOUT` | `logout` | Auth |
 | `ONBOARDING_STARTED` | `onboarding_started` | Auth |
 | `ONBOARDING_COMPLETED` | `onboarding_completed` | Auth |
+| `ONBOARDING_FAILED` | `onboarding_failed` | Auth |
+| `ONBOARDING_ERROR` | `onboarding_error` | Auth |
 | `ONBOARDING_SKIPPED` | `onboarding_skipped` | Auth |
 | `PROJECT_SUBMIT_STARTED` | `project_submit_started` | Projects |
 | `PROJECT_SUBMITTED` | `project_submitted` | Projects |

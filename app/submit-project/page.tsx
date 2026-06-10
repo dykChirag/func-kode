@@ -137,9 +137,14 @@ export default function SubmitProjectPage() {
                 throw new Error('At least one tag is required');
             }
 
-            // Get authentication token
+            // Validate session server-side, then read access_token from local session cache
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+            if (authError || !currentUser) {
+                router.push('/auth/login?redirect=/submit-project');
+                return;
+            }
             const { data: { session } } = await supabase.auth.getSession();
-            
+
             const response = await fetch('/api/projects', {
                 method: 'POST',
                 headers: {

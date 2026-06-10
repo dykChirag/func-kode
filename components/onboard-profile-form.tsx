@@ -67,6 +67,9 @@ export default function OnboardProfileForm({
       setLoading(false);
       if (error) {
         console.error('Supabase update error:', error);
+        track(ANALYTICS_EVENTS.ONBOARDING_FAILED, {
+          error: error.message,
+        });
         setError(`Failed to update profile: ${error.message}`);
         return;
       }
@@ -76,6 +79,9 @@ export default function OnboardProfileForm({
       router.push("/dashboard");
     } catch (err) {
       console.error('Unexpected error:', err);
+      track(ANALYTICS_EVENTS.ONBOARDING_ERROR, {
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
       setLoading(false);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }

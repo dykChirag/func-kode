@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PostHogSdkProvider } from "posthog-js/react";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ const analyticsEnabled = process.env.NODE_ENV !== "development" && Boolean(posth
 export function PostHogProvider({ children }: { children: ReactNode }) {
   const trackedUserId = useRef<string | null>(null);
   const initialized = useRef(false);
+  const [ready, setReady] = useState(!analyticsEnabled || !posthogKey);
 
   useEffect(() => {
     if (!analyticsEnabled || !posthogKey || initialized.current) {
@@ -27,9 +28,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       api_host: posthogHost,
       capture_pageview: false,
       capture_pageleave: true,
-      persistence: "memory",
     });
-    markPostHogInitialized();
 
     const supabase = createClient();
 
@@ -48,9 +47,12 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      syncIdentity(session?.user?.id ?? null);
-    });
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      syncIdentity(user?.id ?? null);
+      markPostHogInitialized();
+      setReady(true);
+    })();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       syncIdentity(session?.user?.id ?? null);
@@ -62,6 +64,10 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   if (!analyticsEnabled || !posthogKey) {
+    return <>{children}</>;
+  }
+
+  if (!ready) {
     return <>{children}</>;
   }
 

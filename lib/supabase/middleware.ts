@@ -41,7 +41,10 @@ export async function updateSession(request: NextRequest) {
   );
 
   try {
-    await supabase.auth.getUser();
+    const { error } = await supabase.auth.getUser();
+    if (error) {
+      throw error;
+    }
   } catch (error) {
     console.warn("[middleware] Supabase session refresh failed, clearing auth cookies", error);
     emitPosthogLog({

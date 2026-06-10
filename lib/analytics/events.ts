@@ -17,6 +17,8 @@ export const ANALYTICS_EVENTS = {
   LOGOUT: "logout",
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_COMPLETED: "onboarding_completed",
+  ONBOARDING_FAILED: "onboarding_failed",
+  ONBOARDING_ERROR: "onboarding_error",
   ONBOARDING_SKIPPED: "onboarding_skipped",
 
   PROJECT_SUBMIT_STARTED: "project_submit_started",
