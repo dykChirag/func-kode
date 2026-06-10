@@ -21,7 +21,7 @@ const poppins = Poppins({
  * Structure:
  *   <div poppins>
  *     <LandingBackground />          ← absolute inset-0, aria-hidden, z-0
- *     <LandingPageContent />         ← relative z-10, Navbar + Hero + About + HowItWorks
+ *     <LandingPageContent />         ← relative z-10, full landing page sections
  *     <EventAnnouncementPopup />     ← client component, fixed z-50, dismissible modal
  *   </div>
  *
