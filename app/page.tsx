@@ -29,7 +29,7 @@ const poppins = Poppins({
  */
 export default function HomePage() {
   return (
-    <div className={`relative w-full overflow-x-hidden ${poppins.className}`}>
+    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className}`}>
       <LandingBackground />
       <LandingPageContent />
       <EventAnnouncementPopup />

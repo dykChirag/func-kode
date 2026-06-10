@@ -135,13 +135,15 @@ When scoring engine v1 ships, bump to `1.0.0` in `package.json`.
 
 ## Mobile Menu
 
-- Hamburger button visible below `xl` breakpoint (1280px)
+- Hamburger button visible below `lg` breakpoint (1024px)
 - Slide-in drawer from the right, `w-[min(100%,320px)]`
 - Backdrop click closes menu
 - `Escape` key closes menu
 - `aria-expanded`, `aria-controls`, `aria-label` on hamburger trigger
 - `document.body.overflow = 'hidden'` while open to prevent background scroll
 - Touch targets ≥ 44×44px (`min-h-[44px]` on interactive elements)
+- Fork count button and Connect/user menu unmount while menu is open (`{!open && ...}`) — prevents them rendering above the overlay at sm–lg viewports
+- X close button container is `z-50` so it renders above the `z-40` overlay
 
 ---
 

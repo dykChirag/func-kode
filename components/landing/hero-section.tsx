@@ -22,16 +22,19 @@ import { HERO_MOCKUP_LEFT_PX } from "@/lib/landing-constants";
  */
 export function HeroSection() {
   return (
-    <section className="w-full pb-16 min-[1440px]:pb-24 min-[1440px]:pt-[180px]">
+    <section className="w-full pb-16 lg:pb-20 min-[1440px]:pb-24 min-[1440px]:pt-[180px]">
       {/*
         Outer wrapper:
-          Default → flex-col, centred, mockup below copy (mobile through tablet / iPad)
-          1440px  → absolute-positioned children; container is the 1440px anchor
+          Default    → flex-col, centred, mockup below copy
+          lg (1024px)→ flex-row, copy left / mockup right, px-landing-canvas padding
+          1440px     → absolute-positioned children; container is the 1440px anchor
       */}
       <div
         className="
           relative flex flex-col items-center gap-10 px-5 pt-10
           sm:px-8
+          lg:flex-row lg:items-center lg:justify-between lg:px-[60px] lg:pt-16 lg:gap-8
+          xl:px-landing-canvas
           min-[1440px]:min-h-[590px] min-[1440px]:items-stretch min-[1440px]:px-0 min-[1440px]:pt-0
         "
       >
@@ -39,6 +42,7 @@ export function HeroSection() {
         <div
           className="
             relative z-10 w-full text-center
+            lg:text-left lg:shrink-0
             min-[1440px]:absolute min-[1440px]:top-0 min-[1440px]:mx-0 min-[1440px]:text-left
             min-[1440px]:left-landing-canvas
           "
@@ -72,6 +76,7 @@ export function HeroSection() {
               mx-auto mb-3.5 max-w-[396px] font-bold text-white tracking-landing-h1
               text-landing-h1-sm
               sm:text-landing-h1-md
+              lg:mx-0 lg:text-landing-h1-md
               min-[1440px]:text-landing-hero min-[1440px]:mx-0
             "
           >
@@ -86,7 +91,7 @@ export function HeroSection() {
             text-landing-body: 16px / 25.4px / tracking-[-0.48px] from #95 token.
             max-w-[456px]: Figma body-text frame width — layout constraint.
           */}
-          <p className="mx-auto mb-[11px] max-w-[456px] text-landing-body text-white/90 min-[1440px]:mx-0">
+          <p className="mx-auto mb-[11px] max-w-[456px] text-landing-body text-white/90 lg:mx-0 min-[1440px]:mx-0">
             func(kode) is an open-source developer platform for the Patch ID community.
             Sign up with GitHub, join collaborative builds, and contribute to projects that matter.
           </p>
@@ -99,6 +104,7 @@ export function HeroSection() {
             className="
               mt-[11px] flex flex-col items-center gap-4
               sm:flex-row sm:flex-wrap sm:justify-center
+              lg:justify-start
               min-[1440px]:justify-start min-[1440px]:gap-landing-cta
             "
           >
@@ -142,6 +148,7 @@ export function HeroSection() {
         <div
           className="
             z-0 mx-auto w-full max-w-[822px]
+            lg:flex-1 lg:mx-0
             min-[1440px]:absolute min-[1440px]:top-0 min-[1440px]:mx-0
             min-[1440px]:w-[822px] min-[1440px]:[left:var(--hero-mockup-left)]
           "
