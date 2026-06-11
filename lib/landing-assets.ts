@@ -52,6 +52,17 @@ export const LANDING_ASSETS = {
   /** Vertical side lines for lower page sections. */
   bgLowerSideLines: "/landing/bg-lower-side-lines.svg",
 
+  // ── Narrative zone decor (ProductLandingPage background-decor) ─────────────
+
+  /** Large contour mesh — diagonal/cyan lines, for-teams & for-developers right side. */
+  bgNarrativeMesh: "/landing/bg-narrative-mesh.svg",
+
+  /** Organic wavy lines — bottom-left of for-developers & contact-us. */
+  bgNarrativeSideWaves: "/landing/bg-narrative-side-waves.svg",
+
+  /** Flow accent glow — bridges mid → narrative sections. */
+  bgNarrativeFlowAccent: "/landing/bg-narrative-flow-accent.svg",
+
   // ── Section illustrations ──────────────────────────────────────────────────
 
   /** Illustration used in the "For Teams & Platforms" section. */

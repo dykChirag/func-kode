@@ -21,7 +21,7 @@ const poppins = Poppins({
  * Structure:
  *   <div poppins>
  *     <LandingBackground />          ← absolute inset-0, aria-hidden, z-0
- *     <LandingPageContent />         ← relative z-10, Navbar + Hero + About + HowItWorks
+ *     <LandingPageContent />         ← relative z-10, full landing page sections
  *     <EventAnnouncementPopup />     ← client component, fixed z-50, dismissible modal
  *   </div>
  *
@@ -29,7 +29,7 @@ const poppins = Poppins({
  */
 export default function HomePage() {
   return (
-    <div className={`relative w-full overflow-x-hidden ${poppins.className}`}>
+    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className}`}>
       <LandingBackground />
       <LandingPageContent />
       <EventAnnouncementPopup />
