@@ -2,13 +2,13 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import posthog from "posthog-js";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export function LoginForm() {
   const handleGithubLogin = async () => {
     const supabase = createClient();
 
-    posthog.capture('login_attempt', { method: 'github' });
+    track(ANALYTICS_EVENTS.LOGIN_ATTEMPTED, { method: "github" });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "github",
@@ -20,7 +20,7 @@ export function LoginForm() {
 
     if (error) {
       console.error("OAuth error:", error.message);
-      posthog.capture('login_failed', { method: 'github', error: error.message });
+      track(ANALYTICS_EVENTS.LOGIN_FAILED, { method: "github", error: error.message });
       return;
     }
 
