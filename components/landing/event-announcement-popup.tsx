@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { X, PartyPopper } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 // ── Safe sessionStorage accessors ─────────────────────────────────────────────
 // sessionStorage throws in sandboxed iframes and SSR contexts.
@@ -68,6 +69,8 @@ const DEFAULT_CONFIG: EventAnnouncementConfig = {
 
 const SESSION_DISMISS_KEY = "funkode_event_announcement_dismissed";
 
+type DismissMethod = "button" | "backdrop" | "escape";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface EventAnnouncementPopupProps {
@@ -87,6 +90,7 @@ export function EventAnnouncementPopup({
   const isActive = config.enabled && !isExpired;
 
   const [open, setOpen] = useState(false);
+  const shownTracked = useRef(false);
 
   useEffect(() => {
     if (!isActive) return;
@@ -96,15 +100,31 @@ export function EventAnnouncementPopup({
     return () => clearTimeout(timer);
   }, [isActive, config.delayMs]);
 
-  const handleDismiss = useCallback(() => {
+  useEffect(() => {
+    if (open && !shownTracked.current) {
+      shownTracked.current = true;
+      track(ANALYTICS_EVENTS.ANNOUNCEMENT_POPUP_SHOWN);
+    }
+  }, [open]);
+
+  const handleDismiss = useCallback((method: DismissMethod) => {
+    track(ANALYTICS_EVENTS.ANNOUNCEMENT_DISMISSED, { method });
     setOpen(false);
     setSessionDismissed(SESSION_DISMISS_KEY);
   }, []);
 
+  const handleCtaClick = useCallback(() => {
+    track(ANALYTICS_EVENTS.ANNOUNCEMENT_CTA_CLICKED, {
+      cta_label: config.ctaLabel,
+      cta_href: config.ctaHref,
+    });
+    handleDismiss("button");
+  }, [config.ctaHref, config.ctaLabel, handleDismiss]);
+
   if (!isActive) return null;
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => { if (!next) handleDismiss(); }}>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         {/* Backdrop — Radix handles focus trap, scroll lock, and Escape key */}
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" />
@@ -118,25 +138,27 @@ export function EventAnnouncementPopup({
             focus:outline-none
             p-0
           "
+          onEscapeKeyDown={() => handleDismiss("escape")}
+          onPointerDownOutside={() => handleDismiss("backdrop")}
         >
           {/* Header */}
           <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-t-2xl p-6 pb-4">
             {/* Close button — 44px touch target per WCAG 2.5.5 */}
-            <Dialog.Close asChild>
-              <button
-                className="
-                  absolute top-2 right-2
-                  flex items-center justify-center
-                  min-w-[44px] min-h-[44px]
-                  rounded-full text-muted-foreground
-                  hover:text-foreground hover:bg-muted/80
-                  transition-colors
-                "
-                aria-label="Close announcement"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </Dialog.Close>
+            <button
+              type="button"
+              className="
+                absolute top-2 right-2
+                flex items-center justify-center
+                min-w-[44px] min-h-[44px]
+                rounded-full text-muted-foreground
+                hover:text-foreground hover:bg-muted/80
+                transition-colors
+              "
+              aria-label="Close announcement"
+              onClick={() => handleDismiss("button")}
+            >
+              <X className="w-4 h-4" />
+            </button>
 
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/70 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
@@ -161,39 +183,37 @@ export function EventAnnouncementPopup({
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              {/* Primary — Dialog.Close triggers onOpenChange(false) → handleDismiss */}
-              <Dialog.Close asChild>
-                <Link
-                  href={config.ctaHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="
-                    flex-1 inline-flex items-center justify-center gap-2
-                    px-5 py-2.5
-                    bg-primary text-primary-foreground
-                    font-semibold rounded-xl shadow-md
-                    hover:opacity-90 hover:shadow-lg
-                    transition-all duration-200
-                    text-sm
-                  "
-                >
-                  {config.ctaLabel}
-                </Link>
-              </Dialog.Close>
-              <Dialog.Close asChild>
-                <button
-                  className="
-                    flex-1 px-5 py-2.5
-                    border border-border bg-background
-                    hover:bg-muted
-                    text-foreground font-medium rounded-xl
-                    transition-colors duration-200
-                    text-sm
-                  "
-                >
-                  {config.secondaryLabel ?? "Maybe Later"}
-                </button>
-              </Dialog.Close>
+              <Link
+                href={config.ctaHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex-1 inline-flex items-center justify-center gap-2
+                  px-5 py-2.5
+                  bg-primary text-primary-foreground
+                  font-semibold rounded-xl shadow-md
+                  hover:opacity-90 hover:shadow-lg
+                  transition-all duration-200
+                  text-sm
+                "
+                onClick={handleCtaClick}
+              >
+                {config.ctaLabel}
+              </Link>
+              <button
+                type="button"
+                className="
+                  flex-1 px-5 py-2.5
+                  border border-border bg-background
+                  hover:bg-muted
+                  text-foreground font-medium rounded-xl
+                  transition-colors duration-200
+                  text-sm
+                "
+                onClick={() => handleDismiss("button")}
+              >
+                {config.secondaryLabel ?? "Maybe Later"}
+              </button>
             </div>
           </div>
         </Dialog.Content>

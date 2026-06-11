@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { HeroEditorMockup } from "@/components/landing/hero-editor-mockup";
+import { LandingCtaLink } from "@/components/landing/landing-cta-link";
 import { HERO_MOCKUP_LEFT_PX } from "@/lib/landing-constants";
 
 /**
@@ -109,8 +109,10 @@ export function HeroSection() {
             "
           >
             {/* Primary CTA — white pill */}
-            <Link
+            <LandingCtaLink
               href="/auth/login"
+              ctaLabel="Start Contributing"
+              section="hero"
               className="
                 inline-flex h-[50px] min-w-[156px] items-center justify-center
                 rounded-full bg-white px-6
@@ -119,11 +121,13 @@ export function HeroSection() {
               "
             >
               Start Contributing
-            </Link>
+            </LandingCtaLink>
 
             {/* Secondary CTA — ghost pill */}
-            <Link
+            <LandingCtaLink
               href="/projects"
+              ctaLabel="Explore the project"
+              section="hero"
               className="
                 inline-flex h-[50px] min-w-[160px] items-center justify-center
                 rounded-full border-2 border-white/[0.13] bg-transparent px-6
@@ -132,7 +136,7 @@ export function HeroSection() {
               "
             >
               Explore the project
-            </Link>
+            </LandingCtaLink>
           </div>
         </div>
 
