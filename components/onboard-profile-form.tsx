@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import posthog from "posthog-js";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export default function OnboardProfileForm({
   initialProfile,
@@ -47,46 +47,40 @@ export default function OnboardProfileForm({
     setError(null);
     
     try {
-      console.log('Submitting onboarding form...');
-      posthog.capture('onboarding_started', { 
+      track(ANALYTICS_EVENTS.ONBOARDING_STARTED, {
         role_preference: form.role_preference,
-        has_bio: !!form.bio,
-        has_skills: !!form.skills
+        has_bio: Boolean(form.bio),
+        has_skills: Boolean(form.skills),
       });
-      
+
       const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({
-          github_username: form.github_username,
-          display_name: form.display_name,
-          bio: form.bio,
-          skills: form.skills,
-          role_preference: form.role_preference,
-          interests: form.interests,
-          is_onboarded: true,
-        })
-        .eq("id", form.id)
-        .select();
+      const { error } = await supabase.from("users").update({
+        github_username: form.github_username,
+        display_name: form.display_name,
+        bio: form.bio,
+        skills: form.skills,
+        role_preference: form.role_preference,
+        interests: form.interests,
+        is_onboarded: true,
+      }).eq("id", form.id);
       
       setLoading(false);
-      if (updateError) {
-        console.error('Supabase update error:', updateError);
-        posthog.capture('onboarding_failed', { 
-          error: updateError.message || JSON.stringify(updateError)
+      if (error) {
+        console.error('Supabase update error:', error);
+        track(ANALYTICS_EVENTS.ONBOARDING_FAILED, {
+          error: error.message,
         });
-        setError(`Failed to update profile: ${updateError.message || 'Unknown error'}`);
+        setError(`Failed to update profile: ${error.message}`);
         return;
       }
-      console.log('Onboarding successful, redirecting...');
-      posthog.capture('onboarding_completed', { 
-        role_preference: form.role_preference
+      track(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+        role_preference: form.role_preference,
       });
       router.push("/dashboard");
     } catch (err) {
       console.error('Unexpected error:', err);
-      posthog.capture('onboarding_error', { 
-        error: err instanceof Error ? err.message : 'Unknown error'
+      track(ANALYTICS_EVENTS.ONBOARDING_ERROR, {
+        error: err instanceof Error ? err.message : "Unknown error",
       });
       setLoading(false);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -98,47 +92,47 @@ export default function OnboardProfileForm({
       <form 
         onSubmit={handleSubmit} 
         action="#"
-        className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 space-y-8 border border-gray-100 animate-fade-in"
+        className="w-full max-w-lg bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-8 space-y-8 border border-gray-100 dark:border-zinc-700 animate-fade-in"
       >
         <div className="flex flex-col items-center gap-2 mb-6">
           {form.avatar_url && (
             <Image src={form.avatar_url} alt="Avatar" width={72} height={72} className="rounded-full border-2 border-blue-500 shadow" />
           )}
-          <span className="text-lg font-semibold text-gray-800">@{form.github_username}</span>
-          <span className="text-sm text-gray-500">GitHub User</span>
+          <span className="text-lg font-semibold text-gray-800 dark:text-white">@{form.github_username}</span>
+          <span className="text-sm text-gray-500 dark:text-zinc-400">GitHub User</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block font-medium mb-1">Display Name</label>
-            <input name="display_name" value={form.display_name} onChange={handleChange} className="input input-bordered w-full" required placeholder="Your name" />
-            <p className="text-xs text-gray-400 mt-1">This will be shown on your profile.</p>
+            <label className="block font-medium mb-1 dark:text-zinc-200">Display Name</label>
+            <input name="display_name" value={form.display_name} onChange={handleChange} className="input input-bordered w-full dark:bg-zinc-800 dark:text-white dark:border-zinc-600" required placeholder="Your name" />
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">This will be shown on your profile.</p>
           </div>
           <div>
-            <label className="block font-medium mb-1">Role Preference</label>
-            <select name="role_preference" value={form.role_preference} onChange={handleChange} className="input input-bordered w-full">
+            <label className="block font-medium mb-1 dark:text-zinc-200">Role Preference</label>
+            <select name="role_preference" value={form.role_preference} onChange={handleChange} className="input input-bordered w-full dark:bg-zinc-800 dark:text-white dark:border-zinc-600">
               <option value="">Select...</option>
               <option value="frontend">Frontend</option>
               <option value="backend">Backend</option>
               <option value="fullstack">Fullstack</option>
             </select>
-            <p className="text-xs text-gray-400 mt-1">What do you want to work on?</p>
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">What do you want to work on?</p>
           </div>
         </div>
         <div>
-          <label className="block font-medium mb-1">Bio</label>
-          <textarea name="bio" value={form.bio} onChange={handleChange} className="input input-bordered w-full" rows={3} placeholder="Tell us about yourself..." />
-          <p className="text-xs text-gray-400 mt-1">A short intro for your profile.</p>
+          <label className="block font-medium mb-1 dark:text-zinc-200">Bio</label>
+          <textarea name="bio" value={form.bio} onChange={handleChange} className="input input-bordered w-full dark:bg-zinc-800 dark:text-white dark:border-zinc-600" rows={3} placeholder="Tell us about yourself..." />
+          <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">A short intro for your profile.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block font-medium mb-1">Skills</label>
-            <input name="skills" value={form.skills} onChange={handleChange} className="input input-bordered w-full" placeholder="e.g. React, Node.js" />
-            <p className="text-xs text-gray-400 mt-1">Comma separated skills.</p>
+            <label className="block font-medium mb-1 dark:text-zinc-200">Skills</label>
+            <input name="skills" value={form.skills} onChange={handleChange} className="input input-bordered w-full dark:bg-zinc-800 dark:text-white dark:border-zinc-600" placeholder="e.g. React, Node.js" />
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">Comma separated skills.</p>
           </div>
           <div>
-            <label className="block font-medium mb-1">Interests</label>
-            <input name="interests" value={form.interests} onChange={handleChange} className="input input-bordered w-full" placeholder="e.g. open source, ai, webdev" />
-            <p className="text-xs text-gray-400 mt-1">Comma separated interests/tags.</p>
+            <label className="block font-medium mb-1 dark:text-zinc-200">Interests</label>
+            <input name="interests" value={form.interests} onChange={handleChange} className="input input-bordered w-full dark:bg-zinc-800 dark:text-white dark:border-zinc-600" placeholder="e.g. open source, ai, webdev" />
+            <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">Comma separated interests/tags.</p>
           </div>
         </div>
         {error && <div className="text-red-500 text-sm text-center">{error}</div>}
