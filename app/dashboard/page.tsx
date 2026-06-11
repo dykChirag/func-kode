@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import posthog from "posthog-js";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 interface UserProfile {
   id: string;
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const dashboardViewedTracked = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -40,7 +41,13 @@ export default function DashboardPage() {
 
       if (profile) {
         setProfile(profile);
-        posthog.capture('dashboard_viewed', { username: profile.github_username, onboarded: profile.is_onboarded });
+        if (!dashboardViewedTracked.current) {
+          dashboardViewedTracked.current = true;
+          track(ANALYTICS_EVENTS.DASHBOARD_VIEWED, {
+            username: profile.github_username,
+            onboarded: profile.is_onboarded,
+          });
+        }
       }
 
       setLoading(false);
@@ -97,7 +104,7 @@ export default function DashboardPage() {
         <Link 
           href="/projects" 
           className="bg-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 border"
-          onClick={() => posthog.capture('dashboard_action_clicked', { action: 'view_projects' })}
+          onClick={() => track(ANALYTICS_EVENTS.DASHBOARD_ACTION_CLICKED, { action: "view_projects" })}
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-brand-blue rounded-lg flex items-center justify-center">
@@ -113,7 +120,7 @@ export default function DashboardPage() {
         <Link 
           href="/onboard" 
           className="bg-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 border"
-          onClick={() => posthog.capture('dashboard_action_clicked', { action: 'complete_profile' })}
+          onClick={() => track(ANALYTICS_EVENTS.DASHBOARD_ACTION_CLICKED, { action: "complete_profile" })}
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-brand-green rounded-lg flex items-center justify-center">
@@ -129,7 +136,7 @@ export default function DashboardPage() {
         <Link 
           href="/events" 
           className="bg-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105 border"
-          onClick={() => posthog.capture('dashboard_action_clicked', { action: 'join_events' })}
+          onClick={() => track(ANALYTICS_EVENTS.DASHBOARD_ACTION_CLICKED, { action: "join_events" })}
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">

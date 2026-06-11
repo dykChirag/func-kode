@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -26,9 +26,28 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function getAuthorName(user: User) {
+    const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
+    if (githubUsername) {
+        return githubUsername;
+    }
+
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
+    if (fullName) {
+        return fullName;
+    }
+
+    if (user.email) {
+        return user.email.split('@')[0];
+    }
+
+    return 'User';
+}
+
 export default function SubmitProjectPage() {
     const router = useRouter();
-    const supabase = createClient();
+    const supabaseRef = useRef(createClient());
+    const supabase = supabaseRef.current;
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -52,33 +71,11 @@ export default function SubmitProjectPage() {
             }
         };
         getUser();
-    }, [supabase.auth, router]);
+    }, [router, supabase]);
 
     // Helper function to safely handle string operations
     const safeString = (value: unknown): string => {
         return typeof value === 'string' ? value : '';
-    };
-
-    // Helper function to get display name for author
-    const getAuthorName = (user: User) => {
-        // Try to get GitHub username from user_metadata
-        const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
-        if (githubUsername) {
-            return githubUsername;
-        }
-        
-        // Try to get full name
-        const fullName = user.user_metadata?.full_name || user.user_metadata?.name;
-        if (fullName) {
-            return fullName;
-        }
-        
-        // Fallback to email username (part before @)
-        if (user.email) {
-            return user.email.split('@')[0];
-        }
-        
-        return 'User';
     };
 
     const [formData, setFormData] = useState({
@@ -140,9 +137,14 @@ export default function SubmitProjectPage() {
                 throw new Error('At least one tag is required');
             }
 
-            // Get authentication token
+            // Validate session server-side, then read access_token from local session cache
+            const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+            if (authError || !currentUser) {
+                router.push('/auth/login?redirect=/submit-project');
+                return;
+            }
             const { data: { session } } = await supabase.auth.getSession();
-            
+
             const response = await fetch('/api/projects', {
                 method: 'POST',
                 headers: {

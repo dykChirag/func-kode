@@ -20,11 +20,7 @@ export function PostHogPageview() {
     }
 
     posthog.capture("$pageview", {
-      $current_url: buildSanitizedPageviewUrl(
-        pathname,
-        search,
-        window.location.origin,
-      ),
+      $current_url: buildSanitizedPageviewUrl(pathname, search, window.location.origin),
       $pathname: pathname,
       $search: search,
     });

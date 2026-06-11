@@ -266,10 +266,10 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
   }, [close]);
 
   return (
-    <header className="relative z-50 w-full px-5 pt-[41px] sm:px-8 lg:px-[122px]">
+    <header className="relative z-50 w-full px-5 pt-[41px] sm:px-8 lg:px-10 xl:px-[122px]">
       <div className="relative flex min-h-10 items-center justify-between gap-3 lg:gap-4">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-          <Link href="/" className="relative z-10 shrink-0" onClick={close}>
+          <Link href="/" className="relative z-10 flex min-h-[44px] shrink-0 items-center" onClick={close}>
             <Image
               src={LANDING_ASSETS.logo}
               alt="func(kode) logo"
@@ -287,7 +287,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
           ) : null}
 
           <nav
-            className="hidden min-w-0 items-center gap-4 overflow-hidden xl:flex xl:gap-6 2xl:gap-8"
+            className="hidden min-w-0 items-center gap-2 overflow-hidden lg:flex xl:gap-6 2xl:gap-8"
             aria-label="Primary"
           >
             {navItems.map((item) => (
@@ -300,30 +300,34 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
           </nav>
         </div>
 
-        <div className="relative z-10 flex shrink-0 items-center gap-2 sm:gap-3">
-          <GitHubForkButton
-            forkCount={forkCount}
-            className="hidden overflow-hidden rounded-full border border-white/20 sm:flex"
-          />
+        <div className="relative z-50 flex shrink-0 items-center gap-2 sm:gap-3">
+          {!open && (
+            <>
+              <GitHubForkButton
+                forkCount={forkCount}
+                className="hidden overflow-hidden rounded-full border border-white/20 sm:flex"
+              />
 
-          {user ? (
-            <UserMenuDropdown
-              user={user}
-              profileHref={profileHref}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <Link
-              href="/auth/login"
-              className="hidden h-10 min-h-[44px] items-center justify-center rounded-full bg-white px-5 text-sm font-bold tracking-[-0.42px] text-black transition-opacity hover:opacity-90 sm:inline-flex"
-            >
-              Connect
-            </Link>
+              {user ? (
+                <UserMenuDropdown
+                  user={user}
+                  profileHref={profileHref}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="hidden h-10 min-h-[44px] items-center justify-center rounded-full bg-white px-5 text-sm font-bold tracking-[-0.42px] text-black transition-opacity hover:opacity-90 sm:inline-flex"
+                >
+                  Connect
+                </Link>
+              )}
+            </>
           )}
 
           <button
             type="button"
-            className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 xl:hidden"
+            className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}
@@ -336,7 +340,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
 
       <div
         id="mobile-menu"
-        className={`fixed inset-0 z-40 bg-[#040710]/90 backdrop-blur-sm transition-opacity duration-200 xl:hidden ${
+        className={`fixed inset-0 z-40 bg-[#040710]/90 backdrop-blur-sm transition-opacity duration-200 lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!open}
@@ -350,7 +354,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
           onClick={(e) => e.stopPropagation()}
         >
           {RELEASE_VERSION ? (
-            <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-white/50">
+            <p className="mb-2 px-3 text-sm font-bold uppercase tracking-wider text-white/50">
               {RELEASE_VERSION}
             </p>
           ) : null}
@@ -366,7 +370,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
 
           <GitHubForkButton
             forkCount={forkCount}
-            className="mt-2 flex overflow-hidden rounded-full border border-white/20"
+            className="mt-2 flex w-fit min-h-[44px] overflow-hidden rounded-full border border-white/20"
             onClick={close}
           />
 
