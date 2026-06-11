@@ -1,6 +1,6 @@
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState } from "react";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export function SignUpForm() {
   const [loading, setLoading] = useState(false);
@@ -18,12 +19,14 @@ export function SignUpForm() {
   const handleGithub = async () => {
     setErrorMsg(null);
     setLoading(true);
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
     try {
       const origin = window.location.origin;
       const params = new URLSearchParams(window.location.search);
       const nextParam = params.get("redirect") || params.get("next") || "/dashboard";
       const callback = `${origin}/auth/callback${nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""}`;
+
+      track(ANALYTICS_EVENTS.SIGNUP_ATTEMPTED, { method: "github" });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "github",
@@ -35,6 +38,7 @@ export function SignUpForm() {
       if (error) {
         setErrorMsg("Could not start GitHub sign-in. Please try again.");
         setLoading(false);
+        track(ANALYTICS_EVENTS.SIGNUP_FAILED, { method: "github", error: error.message });
         return;
       }
       if (data?.url) {

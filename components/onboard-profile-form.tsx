@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 export default function OnboardProfileForm({
   initialProfile,
@@ -46,8 +47,13 @@ export default function OnboardProfileForm({
     setError(null);
     
     try {
-      console.log('Submitting onboarding form...');
-      const supabase = createClientComponentClient();
+      track(ANALYTICS_EVENTS.ONBOARDING_STARTED, {
+        role_preference: form.role_preference,
+        has_bio: Boolean(form.bio),
+        has_skills: Boolean(form.skills),
+      });
+
+      const supabase = createClient();
       const { error } = await supabase.from("users").update({
         github_username: form.github_username,
         display_name: form.display_name,
@@ -61,13 +67,21 @@ export default function OnboardProfileForm({
       setLoading(false);
       if (error) {
         console.error('Supabase update error:', error);
+        track(ANALYTICS_EVENTS.ONBOARDING_FAILED, {
+          error: error.message,
+        });
         setError(`Failed to update profile: ${error.message}`);
         return;
       }
-      console.log('Onboarding successful, redirecting...');
+      track(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+        role_preference: form.role_preference,
+      });
       router.push("/dashboard");
     } catch (err) {
       console.error('Unexpected error:', err);
+      track(ANALYTICS_EVENTS.ONBOARDING_ERROR, {
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
       setLoading(false);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }

@@ -1,25 +1,32 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+// Requires RLS on profiles allowing SELECT where auth.uid() = id — see database/profiles.sql
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/auth/login?redirect=/dashboard");
   }
 
-  // Fetch user profile
-  const { data: userProfile } = await supabase
-    .from("users")
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
     .select("is_onboarded")
-    .eq("id", session.user.id)
-    .maybeSingle();
+    .eq("id", user.id)
+    .single();
 
-  if (!userProfile?.is_onboarded) {
+  if (profileError) {
+    // PGRST116 = no row yet (user has not onboarded)
+    if (profileError.code !== "PGRST116") {
+      console.error("[DashboardLayout] Failed to fetch profile:", profileError.message);
+    }
+    redirect("/onboard");
+  }
+
+  if (!profile.is_onboarded) {
     redirect("/onboard");
   }
 
