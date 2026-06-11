@@ -50,24 +50,21 @@ All typography values come from design tokens defined in [`architecture/design-t
 | Body | `text-landing-body` | `16px / 25.4px, tracking -0.48px` |
 | CTA tracking | `tracking-landing-cta` | `-0.45px` |
 | CTA gap (1440px) | `gap-landing-cta` | `47px` |
-| Container padding | `px-landing-canvas` | `122px` (lg) |
+| Container padding (lg) | `px-[60px]` | `60px` (1024–1279px) |
+| Container padding (xl) | `px-landing-canvas` | `122px` (1280–1439px) |
 
 ---
 
 ## Layout
 
 ```
-Mobile (< 1024px)
+Mobile through tablet / iPad (< 1440px)
   flex-col, centred
   [Label]
   [H1]
   [Body]
   [CTAs stacked → row at sm]
-  [HeroEditorMockup below]
-
-Desktop (>= 1024px / lg)
-  flex-row, px-landing-canvas (122px) each side
-  [Copy block left]   [HeroEditorMockup right, flex-1]
+  [HeroEditorMockup below, centred]
 
 1440px (Figma pixel-perfect)
   absolute positioning within max-w-[1440px] container
@@ -75,7 +72,9 @@ Desktop (>= 1024px / lg)
   Mockup: left = 572px  (HERO_MOCKUP_LEFT_PX — see lib/landing-constants.ts)
 ```
 
-The `572px` mockup offset is the only value not covered by a Tailwind token. It is documented in `lib/landing-constants.ts` as `HERO_MOCKUP_LEFT_PX` and used at `min-[1440px]:` only. Per issue #97 spec, pixel-perfect Figma positioning is acceptable at 1440px.
+A two-column flex row is active from 1024px–1439px (`lg:flex-row`). The mockup gets reduced padding at this range to keep it at an acceptable size (see Responsive Behaviour table below).
+
+The `572px` mockup offset is the only value not covered by a Tailwind token. It is documented in `lib/landing-constants.ts` as `HERO_MOCKUP_LEFT_PX` and applied at `min-[1440px]:` only via `--hero-mockup-left` (not a always-on inline `left`, which clipped the mockup on viewports below 1440px — see [#135](https://github.com/patchid/func-kode/issues/135)). Per issue #97 spec, pixel-perfect Figma positioning is acceptable at 1440px.
 
 ---
 
@@ -99,7 +98,8 @@ The `572px` mockup offset is the only value not covered by a Tailwind token. It 
 | `< 375px` | Single column, centred, 20px padding |
 | `375px – 767px` | Single column. CTAs stack vertically, then row at `sm`. |
 | `768px – 1023px` | Single column, 32px padding (`sm:px-8`). |
-| `1024px – 1439px` | Two-column flex row. Copy left, mockup right (`lg:flex-1`). `px-landing-canvas` (122px) padding. |
+| `1024px – 1279px` | Two-column flex row. Copy left, mockup right (`lg:flex-1`). `px-[60px]` padding — keeps mockup at ~413px width. |
+| `1280px – 1439px` | Two-column flex row. `px-landing-canvas` (122px) padding — mockup gets ~545px. |
 | `>= 1440px` | Absolute positioning. Copy at left 122px, mockup at left 572px. Pixel-perfect Figma match. |
 
 ---
@@ -111,14 +111,16 @@ The `572px` mockup offset is the only value not covered by a Tailwind token. It 
 import { Poppins } from "next/font/google";
 import { LandingBackground } from "@/components/landing/landing-background";
 import { LandingPageContent } from "@/components/landing/landing-page-content";
+import { EventAnnouncementPopup } from "@/components/landing/event-announcement-popup";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400","600","700","800"], display: "swap" });
 
 export default function HomePage() {
   return (
-    <div className={`relative w-full overflow-x-hidden ${poppins.className}`}>
-      <LandingBackground />   {/* absolute inset-0, z-0, aria-hidden */}
-      <LandingPageContent />  {/* relative z-10, Navbar + HeroSection */}
+    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className}`}>
+      <LandingBackground />        {/* absolute inset-0, z-0, aria-hidden */}
+      <LandingPageContent />       {/* relative z-10, Navbar + HeroSection */}
+      <EventAnnouncementPopup />   {/* client component, fixed z-50, dismissible modal */}
     </div>
   );
 }

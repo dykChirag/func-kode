@@ -6,11 +6,10 @@ import { HERO_MOCKUP_LEFT_PX } from "@/lib/landing-constants";
  * HeroSection
  *
  * Layout strategy:
- *   < 1024px  (mobile/tablet):  single column, centred
- *   >= 1024px (lg):             two-column flex row — copy left, mockup right
- *   >= 1440px (Figma canvas):   absolute positioning inside max-w-[1440px] container
- *                                 copy  left = 122px via left-landing-canvas (Tailwind spacing token)
- *                                 mockup left = HERO_MOCKUP_LEFT_PX (572px, lib/landing-constants.ts)
+ *   < 1440px  (mobile / tablet / small desktop): single column, centred — copy then mockup
+ *   >= 1440px (Figma canvas):                 absolute positioning inside max-w-[1440px]
+ *                                               copy  left = 122px (left-landing-canvas)
+ *                                               mockup left = HERO_MOCKUP_LEFT_PX (572px)
  *
  * Typography: all sizes, tracking, leading use design tokens from #95.
  * Layout px values (h-[50px], max-w-[459px] etc.) are Figma frame dimensions,
@@ -23,18 +22,19 @@ import { HERO_MOCKUP_LEFT_PX } from "@/lib/landing-constants";
  */
 export function HeroSection() {
   return (
-    <section className="w-full pb-16 lg:pb-24 lg:pt-[180px]">
+    <section className="w-full pb-16 lg:pb-20 min-[1440px]:pb-24 min-[1440px]:pt-[180px]">
       {/*
         Outer wrapper:
-          Default → flex-col, centred, 20px side padding
-          lg      → flex-row, px-landing-canvas (122px) padding
-          1440px  → absolute-positioned children; container is the 1440px anchor
+          Default    → flex-col, centred, mockup below copy
+          lg (1024px)→ flex-row, copy left / mockup right, px-landing-canvas padding
+          1440px     → absolute-positioned children; container is the 1440px anchor
       */}
       <div
         className="
           relative flex flex-col items-center gap-10 px-5 pt-10
           sm:px-8
-          lg:flex-row lg:items-start lg:justify-between lg:px-landing-canvas lg:gap-0
+          lg:flex-row lg:items-center lg:justify-between lg:px-[60px] lg:pt-16 lg:gap-8
+          xl:px-landing-canvas
           min-[1440px]:min-h-[590px] min-[1440px]:items-stretch min-[1440px]:px-0 min-[1440px]:pt-0
         "
       >
@@ -42,7 +42,7 @@ export function HeroSection() {
         <div
           className="
             relative z-10 w-full text-center
-            lg:shrink-0 lg:text-left
+            lg:text-left lg:shrink-0
             min-[1440px]:absolute min-[1440px]:top-0 min-[1440px]:mx-0 min-[1440px]:text-left
             min-[1440px]:left-landing-canvas
           "
@@ -67,7 +67,7 @@ export function HeroSection() {
             H1 responsive font-size via tokens:
               mobile  → text-landing-h1-sm (32px / 1.18)
               sm      → text-landing-h1-md (40px / 48px)
-              lg      → text-landing-hero  (46px / 54.1px) — matches two-column breakpoint
+              lg      → text-landing-hero  (46px / 54.1px) — at 1440px Figma canvas only
             tracking-landing-h1 (-1.38px) applied at all sizes.
             max-w-[396px]: Figma copy frame inner text-wrap width — layout constraint.
           */}
@@ -76,7 +76,8 @@ export function HeroSection() {
               mx-auto mb-3.5 max-w-[396px] font-bold text-white tracking-landing-h1
               text-landing-h1-sm
               sm:text-landing-h1-md
-              lg:text-landing-hero lg:mx-0
+              lg:mx-0 lg:text-landing-h1-md
+              min-[1440px]:text-landing-hero min-[1440px]:mx-0
             "
           >
             Build together.
@@ -90,7 +91,7 @@ export function HeroSection() {
             text-landing-body: 16px / 25.4px / tracking-[-0.48px] from #95 token.
             max-w-[456px]: Figma body-text frame width — layout constraint.
           */}
-          <p className="mx-auto mb-[11px] max-w-[456px] text-landing-body text-white/90 lg:mx-0">
+          <p className="mx-auto mb-[11px] max-w-[456px] text-landing-body text-white/90 lg:mx-0 min-[1440px]:mx-0">
             func(kode) is an open-source developer platform for the Patch ID community.
             Sign up with GitHub, join collaborative builds, and contribute to projects that matter.
           </p>
@@ -104,7 +105,7 @@ export function HeroSection() {
               mt-[11px] flex flex-col items-center gap-4
               sm:flex-row sm:flex-wrap sm:justify-center
               lg:justify-start
-              min-[1440px]:gap-landing-cta
+              min-[1440px]:justify-start min-[1440px]:gap-landing-cta
             "
           >
             {/* Primary CTA — white pill */}
@@ -137,25 +138,25 @@ export function HeroSection() {
 
         {/* ── Editor mockup ───────────────────────────────────────────────── */}
         {/*
-          Inline style left: HERO_MOCKUP_LEFT_PX sources the 572px value from
-          lib/landing-constants.ts — satisfies issue #95 / #97 requirement that
-          572px must be a named constant, NOT an arbitrary Tailwind class.
-
-          Safety: `left` only takes visual effect on positioned elements.
-          Below min-[1440px], this element is position:static (in flex flow),
-          so the inline left value is ignored by the browser.
-          At min-[1440px]:absolute, left: 572px activates correctly.
+          Below 1440px: normal flex child — no absolute offset (fixes #135).
+          At min-[1440px]: absolute + left from HERO_MOCKUP_LEFT_PX via CSS variable
+          so the 572px constant is never applied as a bare inline `left` on relative
+          positioning (which pushed the mockup off-screen between lg and 1440px).
 
           max-w-[822px]: Figma mockup frame width — layout constraint.
         */}
         <div
           className="
-            relative z-0 w-full max-w-[822px]
-            lg:flex-1
+            z-0 mx-auto w-full max-w-[822px]
+            lg:flex-1 lg:mx-0
             min-[1440px]:absolute min-[1440px]:top-0 min-[1440px]:mx-0
-            min-[1440px]:w-[822px]
+            min-[1440px]:w-[822px] min-[1440px]:[left:var(--hero-mockup-left)]
           "
-          style={{ left: HERO_MOCKUP_LEFT_PX }}
+          style={
+            {
+              ["--hero-mockup-left" as string]: `${HERO_MOCKUP_LEFT_PX}px`,
+            } as React.CSSProperties
+          }
         >
           <HeroEditorMockup />
         </div>

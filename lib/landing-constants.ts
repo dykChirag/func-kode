@@ -7,8 +7,9 @@
  *   - These are raw pixel coordinates from the Figma canvas, NOT design tokens.
  *   - Do NOT use these as arbitrary Tailwind classes (e.g. w-[572px]).
  *   - Do NOT use these as CSS custom property values or min-h / max-h values.
- *   - Safe usage: inline styles (`style={{ left: HERO_MOCKUP_LEFT_PX }}`) for
- *     absolutely-positioned elements that must match the Figma canvas exactly.
+ *   - Safe usage: CSS custom property + `min-[1440px]:[left:var(--hero-mockup-left)]`
+ *     so the offset applies only when the element is absolutely positioned at 1440px+.
+ *     Do NOT set a bare inline `left` on a relatively positioned flex child (#135).
  *   - For responsive spacing that scales, prefer the Tailwind tokens in
  *     tailwind.config.ts (e.g. `px-landing-canvas`, `gap-landing-cta`).
  */
@@ -45,3 +46,22 @@ export const HERO_MOCKUP_HEIGHT_PX = 590;
  * Use this constant only when you need the raw pixel value (e.g. JS calculations).
  */
 export const HERO_TEXT_LEFT_PX = 122;
+
+/**
+ * Figma full-page gradient color-stop Y positions (4727px artboard).
+ * Used as fixed px stops so purple stays at the about / how-it-works band
+ * regardless of actual page height (percentage stops shift on short pages).
+ */
+export const LANDING_GRADIENT_STOPS_PX = {
+  darkStart: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.04),    // 189px
+  purplePeak: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.35),   // 1654px
+  surfaceStart: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.64), // 3025px
+  surfaceEnd: Math.round(FIGMA_CANVAS_HEIGHT_PX * 0.88),   // 4160px
+} as const;
+
+/**
+ * ProductLandingPage / Figma gradient — percentage stops on 4727px artboard.
+ * feat/ui-navbar-herosection uses the same inline % form in LandingBackground.
+ */
+export const LANDING_PAGE_GRADIENT =
+  "linear-gradient(180deg, #040710 4%, #7020BF 35%, #111B34 64%, #111B34 88%)";

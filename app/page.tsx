@@ -1,6 +1,7 @@
 import { Poppins } from "next/font/google";
 import { LandingBackground } from "@/components/landing/landing-background";
 import { LandingPageContent } from "@/components/landing/landing-page-content";
+import { EventAnnouncementPopup } from "@/components/landing/event-announcement-popup";
 
 /**
  * Poppins scoped to landing page only.
@@ -19,17 +20,19 @@ const poppins = Poppins({
  *
  * Structure:
  *   <div poppins>
- *     <LandingBackground />   ← absolute inset-0, aria-hidden, z-0
- *     <LandingPageContent />  ← relative z-10, Navbar + HeroSection
+ *     <LandingBackground />          ← absolute inset-0, aria-hidden, z-0
+ *     <LandingPageContent />         ← relative z-10, full landing page sections
+ *     <EventAnnouncementPopup />     ← client component, fixed z-50, dismissible modal
  *   </div>
  *
  * Page height grows with content — no min-h-[4727px] or any fixed height.
  */
 export default function HomePage() {
   return (
-    <div className={`relative w-full overflow-x-hidden ${poppins.className}`}>
+    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className}`}>
       <LandingBackground />
       <LandingPageContent />
+      <EventAnnouncementPopup />
     </div>
   );
 }
