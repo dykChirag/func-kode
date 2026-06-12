@@ -7,6 +7,7 @@ import { ForDevelopersSection } from "@/components/landing/for-developers-sectio
 import { ForTeamsSection } from "@/components/landing/for-teams-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
+import { LandingPageAnalytics } from "@/components/landing/landing-page-analytics";
 import { useForkCount } from "@/components/site-chrome";
 
 /**
@@ -27,6 +28,7 @@ export function LandingPageContent() {
 
   return (
     <div className="relative z-10 mx-auto w-full max-w-[1440px] overflow-visible">
+      <LandingPageAnalytics />
       <Navbar variant="landing" forkCount={forkCount} />
       <HeroSection />
       <AboutSection />

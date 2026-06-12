@@ -10,12 +10,17 @@ import { PostHogPageview } from "@/components/providers/posthog-pageview";
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
-const analyticsEnabled = process.env.NODE_ENV !== "development" && Boolean(posthogKey);
+
+/** Enabled in production when a key is set; in dev only when explicitly opted in. */
+const analyticsEnabled =
+  Boolean(posthogKey) &&
+  (process.env.NODE_ENV !== "development" ||
+    process.env.NEXT_PUBLIC_POSTHOG_ENABLED === "true");
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
   const trackedUserId = useRef<string | null>(null);
   const initialized = useRef(false);
-  const [ready, setReady] = useState(!analyticsEnabled || !posthogKey);
+  const [identityReady, setIdentityReady] = useState(false);
 
   useEffect(() => {
     if (!analyticsEnabled || !posthogKey || initialized.current) {
@@ -29,6 +34,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
       capture_pageview: false,
       capture_pageleave: true,
     });
+    markPostHogInitialized();
 
     const supabase = createClient();
 
@@ -50,8 +56,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       syncIdentity(user?.id ?? null);
-      markPostHogInitialized();
-      setReady(true);
+      setIdentityReady(true);
     })();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -67,15 +72,13 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!ready) {
-    return <>{children}</>;
-  }
-
   return (
     <PostHogSdkProvider client={posthog}>
-      <Suspense fallback={null}>
-        <PostHogPageview />
-      </Suspense>
+      {identityReady ? (
+        <Suspense fallback={null}>
+          <PostHogPageview />
+        </Suspense>
+      ) : null}
       {children}
     </PostHogSdkProvider>
   );
