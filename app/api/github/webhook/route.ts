@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
@@ -23,8 +18,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Move logic to a background async handler (no await in main handler)
 async function handleGitHubEvent(eventType: string | null, payload: Record<string, unknown>) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   console.log("Event received:", eventType);
   console.log("Payload:", payload);
 

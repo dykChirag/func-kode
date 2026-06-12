@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
+
+const DISCORD_URL = "https://discord.gg/nnkA8xJ3JU";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -21,7 +24,7 @@ export function Footer() {
     ],
     community: [
       { name: "GitHub", href: "https://github.com/func-Kode" },
-      { name: "Discord", href: "#" },
+      { name: "Discord", href: DISCORD_URL },
       { name: "Twitter", href: "#" },
       { name: "LinkedIn", href: "#" },
     ],
@@ -65,9 +68,12 @@ export function Footer() {
                 <span className="text-xl">🐙</span>
               </Link>
               <Link 
-                href="#" 
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors duration-200"
                 aria-label="Discord"
+                onClick={() => track(ANALYTICS_EVENTS.DISCORD_LINK_CLICKED, { source: "footer" })}
               >
                 <span className="text-xl">💬</span>
               </Link>

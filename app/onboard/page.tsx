@@ -7,6 +7,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import OnboardProfileForm from "@/components/onboard-profile-form";
 import Image from 'next/image';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 
 export default function OnboardPage() {
   const supabaseRef = useRef(createClient());
@@ -15,6 +16,7 @@ export default function OnboardPage() {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<ProfileShape | null>(null);
+  const onboardingStartedTracked = useRef(false);
 
   useEffect(() => {
     // Listen for auth state changes to restore session
@@ -85,6 +87,13 @@ export default function OnboardPage() {
       router.push('/auth/login');
     }
   }, [loading, session, router]);
+
+  useEffect(() => {
+    if (!loading && session && !onboardingStartedTracked.current) {
+      onboardingStartedTracked.current = true;
+      track(ANALYTICS_EVENTS.ONBOARDING_STARTED);
+    }
+  }, [loading, session]);
 
   // Define the expected profile type
   interface ProfileShape {

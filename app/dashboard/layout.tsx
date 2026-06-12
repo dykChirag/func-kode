@@ -1,22 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { createClient } from "@supabase/supabase-js";
 
-/**
- * Returns a Supabase admin client authenticated via the service-role key.
- * Avoids HTTP loopback calls from server components to internal API routes.
- */
-function getAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase server configuration");
-  }
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-}
-
+// Requires RLS on profiles allowing SELECT where auth.uid() = id — see database/profiles.sql
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -27,14 +12,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/login?redirect=/dashboard");
   }
 
-  const admin = getAdminClient();
-  const { data: profile, error } = await admin
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("is_onboarded")
     .eq("id", user.id)
-    .maybeSingle();
+    .single();
 
-  if (error || !profile?.is_onboarded) {
+  if (profileError) {
+    // PGRST116 = no row yet (user has not onboarded)
+    if (profileError.code !== "PGRST116") {
+      console.error("[DashboardLayout] Failed to fetch profile:", profileError.message);
+    }
+    redirect("/onboard");
+  }
+
+  if (!profile.is_onboarded) {
     redirect("/onboard");
   }
 

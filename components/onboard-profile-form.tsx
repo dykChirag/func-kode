@@ -45,7 +45,7 @@ export default function OnboardProfileForm({
     e.stopPropagation();
     setLoading(true);
     setError(null);
-    
+
     try {
       track(ANALYTICS_EVENTS.ONBOARDING_STARTED, {
         role_preference: form.role_preference,
@@ -63,7 +63,7 @@ export default function OnboardProfileForm({
         interests: form.interests,
         is_onboarded: true,
       }).eq("id", form.id);
-      
+
       setLoading(false);
       if (error) {
         console.error('Supabase update error:', error);
@@ -89,8 +89,8 @@ export default function OnboardProfileForm({
 
   return (
     <div className="flex justify-center items-center min-h-[60vh]">
-      <form 
-        onSubmit={handleSubmit} 
+      <form
+        onSubmit={handleSubmit}
         action="#"
         className="w-full max-w-lg bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-8 space-y-8 border border-gray-100 dark:border-zinc-700 animate-fade-in"
       >

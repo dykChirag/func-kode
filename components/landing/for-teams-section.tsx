@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { LANDING_ASSETS } from "@/lib/landing-assets";
+import { LandingCtaLink } from "@/components/landing/landing-cta-link";
 
 const BULLET_POINTS = [
   "Pre-screen devs with a 0-100 trust score before interviews.",
@@ -92,8 +92,10 @@ export function ForTeamsSection() {
               We&apos;re onboarding a small number of design partners.
             </p>
 
-            <Link
+            <LandingCtaLink
               href="/#contact-us"
+              ctaLabel="WANT IN?"
+              section="for-teams"
               className="
                 inline-flex h-[45px] w-full items-center justify-center
                 rounded-full border border-[#FFA800] bg-transparent px-6
@@ -103,7 +105,7 @@ export function ForTeamsSection() {
               "
             >
               WANT IN? &rarr;
-            </Link>
+            </LandingCtaLink>
           </div>
         </div>
       </div>

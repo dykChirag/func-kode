@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import type { User } from "@supabase/supabase-js";
 import type React from "react";
@@ -30,6 +31,7 @@ export default function BlogDetailPage() {
   const [comment, setComment] = useState("");
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+  const blogViewedTracked = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -64,6 +66,17 @@ export default function BlogDetailPage() {
     fetchData();
   }, [slug]);
 
+  useEffect(() => {
+    if (blog && !blogViewedTracked.current) {
+      blogViewedTracked.current = true;
+      track(ANALYTICS_EVENTS.BLOG_POST_VIEWED, {
+        slug: blog.slug,
+        title: blog.title,
+        author: blog.author,
+      });
+    }
+  }, [blog]);
+
   const handleLike = async () => {
     if (!user || !blog) return;
     const supabase = createClient();
@@ -73,6 +86,7 @@ export default function BlogDetailPage() {
       setLiked(false);
     } else {
       await supabase.from("blog_likes").insert({ blog_id: blog.id, user_id: user.id });
+      track(ANALYTICS_EVENTS.BLOG_LIKED, { blog_id: blog.id, slug: blog.slug });
       setLikes((l) => l + 1);
       setLiked(true);
     }
@@ -82,12 +96,16 @@ export default function BlogDetailPage() {
     e.preventDefault();
     if (!user || !blog || !comment.trim()) return;
     const supabase = createClient();
-    await supabase.from("blog_comments").insert({
+    const { error } = await supabase.from("blog_comments").insert({
       blog_id: blog.id,
       user_id: user.id,
       user_email: user.email ?? '',
       text: comment,
     });
+    if (error) {
+      return;
+    }
+    track(ANALYTICS_EVENTS.BLOG_COMMENTED, { blog_id: blog.id, slug: blog.slug });
     setComments((prev) => [...prev, { user_email: user.email ?? '', text: comment, created_at: new Date().toISOString() }]);
     setComment("");
     setTimeout(() => {
