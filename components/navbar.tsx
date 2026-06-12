@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -232,8 +233,10 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
   const profileHref = needsOnboard ? "/onboard" : "/profile";
 
   const handleLogout = useCallback(async () => {
+    track(ANALYTICS_EVENTS.LOGOUT);
     const supabase = createClient();
     await supabase.auth.signOut();
+    posthog.reset();
     setUser(null);
     setNeedsOnboard(false);
     router.push("/auth/login");
