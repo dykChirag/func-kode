@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 export async function getActivityLogs({ limit = 50, repo, username, event_type }: {
   limit?: number;
   repo?: string;
   username?: string;
   event_type?: string;
 } = {}) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   let query = supabase.from('activities').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(limit);
 
   if (repo) query = query.eq('repo', repo);
