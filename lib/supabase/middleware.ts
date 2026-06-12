@@ -1,6 +1,13 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { AuthSessionMissingError } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { emitPosthogLog } from "@/lib/posthog-server-logger";
+
+const AUTH_EXCHANGE_PATHS = ["/auth/callback", "/auth/confirm"];
+
+function isAuthExchangePath(pathname: string): boolean {
+  return AUTH_EXCHANGE_PATHS.some((path) => pathname.startsWith(path));
+}
 
 function hasSupabaseAuthCookies(request: NextRequest): boolean {
   return request.cookies.getAll().some((cookie) => cookie.name.includes("auth-token"));
@@ -15,6 +22,10 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse):
 }
 
 export async function updateSession(request: NextRequest) {
+  if (isAuthExchangePath(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
+
   if (!hasSupabaseAuthCookies(request)) {
     return NextResponse.next({ request });
   }
@@ -46,6 +57,11 @@ export async function updateSession(request: NextRequest) {
       throw error;
     }
   } catch (error) {
+    // No session yet (e.g. stale cookies before OAuth callback) — not an error.
+    if (error instanceof AuthSessionMissingError) {
+      return supabaseResponse;
+    }
+
     console.warn("[middleware] Supabase session refresh failed, clearing auth cookies", error);
     emitPosthogLog({
       body: "Supabase session refresh failed in middleware",

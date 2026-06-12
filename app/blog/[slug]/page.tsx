@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import type { User } from "@supabase/supabase-js";
 import type React from "react";
@@ -30,17 +31,15 @@ export default function BlogDetailPage() {
   const [comment, setComment] = useState("");
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+  const blogViewedTracked = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
     const fetchData = async () => {
-      // Fetch blog
       const { data: blogData } = await supabase.from("blogs").select("*").eq("slug", slug).single();
       setBlog(blogData);
-      // Fetch user
       const { data: userData } = await supabase.auth.getUser();
       setUser(userData.user);
-      // Fetch likes
       if (blogData) {
         const { count: likesCount } = await supabase
           .from("blog_likes")
@@ -55,7 +54,6 @@ export default function BlogDetailPage() {
             .eq("user_id", userData.user.id);
           setLiked(!!userLike);
         }
-        // Fetch comments
         const { data: commentsData } = await supabase
           .from("blog_comments")
           .select("user_email, text, created_at")
@@ -68,6 +66,17 @@ export default function BlogDetailPage() {
     fetchData();
   }, [slug]);
 
+  useEffect(() => {
+    if (blog && !blogViewedTracked.current) {
+      blogViewedTracked.current = true;
+      track(ANALYTICS_EVENTS.BLOG_POST_VIEWED, {
+        slug: blog.slug,
+        title: blog.title,
+        author: blog.author,
+      });
+    }
+  }, [blog]);
+
   const handleLike = async () => {
     if (!user || !blog) return;
     const supabase = createClient();
@@ -77,6 +86,7 @@ export default function BlogDetailPage() {
       setLiked(false);
     } else {
       await supabase.from("blog_likes").insert({ blog_id: blog.id, user_id: user.id });
+      track(ANALYTICS_EVENTS.BLOG_LIKED, { blog_id: blog.id, slug: blog.slug });
       setLikes((l) => l + 1);
       setLiked(true);
     }
@@ -86,12 +96,16 @@ export default function BlogDetailPage() {
     e.preventDefault();
     if (!user || !blog || !comment.trim()) return;
     const supabase = createClient();
-    await supabase.from("blog_comments").insert({
+    const { error } = await supabase.from("blog_comments").insert({
       blog_id: blog.id,
       user_id: user.id,
       user_email: user.email ?? '',
       text: comment,
     });
+    if (error) {
+      return;
+    }
+    track(ANALYTICS_EVENTS.BLOG_COMMENTED, { blog_id: blog.id, slug: blog.slug });
     setComments((prev) => [...prev, { user_email: user.email ?? '', text: comment, created_at: new Date().toISOString() }]);
     setComment("");
     setTimeout(() => {
@@ -107,10 +121,10 @@ export default function BlogDetailPage() {
       <Link href="/blog" className="text-brand-green hover:underline text-sm">← Back to Blog</Link>
       <div className="flex flex-col items-center gap-4 mb-8 mt-2">
         <span className="inline-block animate-bounce">
-          <Image src={blog.image || "/raccoon.png"} alt="Raccoon Mascot" width={48} height={48} />
+          <Image src={blog.image || "/landing/logo.png"} alt="Blog image" width={48} height={48} />
         </span>
-        <h1 className="text-3xl font-bold text-brand-blue dark:text-brand-blue text-center">{blog.title}</h1>
-        <p className="text-xs text-gray-500">By {blog.author} • {blog.date}</p>
+        <h1 className="text-3xl font-bold text-brand-blue dark:text-white text-center">{blog.title}</h1>
+        <p className="text-sm text-muted-foreground">By {blog.author} • {blog.date}</p>
       </div>
       <article className="prose prose-brand dark:prose-invert max-w-none mb-8">
         {blog.content.split("\n").map((line, i) => (
@@ -127,16 +141,16 @@ export default function BlogDetailPage() {
         >
           👍 {likes}
         </Button>
-        {!user && <span className="text-xs text-gray-500">Sign in to like</span>}
+        {!user && <span className="text-sm text-muted-foreground">Sign in to like</span>}
       </div>
       {/* Comments */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-2">Comments</h2>
         <div className="flex flex-col gap-3">
-          {comments.length === 0 && <span className="text-gray-500 text-sm">No comments yet.</span>}
+          {comments.length === 0 && <span className="text-muted-foreground text-sm">No comments yet.</span>}
           {comments.map((c, i) => (
             <div key={i} className="bg-brand-gray dark:bg-card rounded p-2 text-sm">
-              <span className="font-semibold text-brand-blue dark:text-brand-blue">{c.user_email}</span>: {c.text}
+              <span className="font-semibold text-brand-blue dark:text-gray-300">{c.user_email}</span>: {c.text}
             </div>
           ))}
           <div ref={commentsEndRef} />
@@ -144,7 +158,7 @@ export default function BlogDetailPage() {
         {user ? (
           <form className="flex gap-2 mt-4" onSubmit={handleComment}>
             <input
-              className="flex-1 rounded border px-2 py-1 text-sm bg-white dark:bg-card text-brand-blue dark:text-brand-blue"
+              className="flex-1 rounded border px-2 py-1 text-sm bg-white dark:bg-card text-brand-blue dark:text-foreground"
               placeholder="Add a comment..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -152,7 +166,7 @@ export default function BlogDetailPage() {
             <Button type="submit" size="sm">Comment</Button>
           </form>
         ) : (
-          <div className="text-xs text-gray-500 mt-2">Sign in to comment</div>
+          <div className="text-sm text-muted-foreground mt-2">Sign in to comment</div>
         )}
       </div>
     </main>
