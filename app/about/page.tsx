@@ -13,15 +13,15 @@ export default function AboutPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [user, setUser] = useState<object | null>(null);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user as unknown as object | null);
     };
     getUser();
-  }, [supabase.auth]);
+  }, []);
 
   const handleDashboardClick = () => {
     if (user) {

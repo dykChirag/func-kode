@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.0",
-    "@opennextjs/cloudflare": "^1.19.11",
     "@opentelemetry/api-logs": "0.218.0",
     "@opentelemetry/exporter-logs-otlp-http": "0.218.0",
     "@opentelemetry/resources": "2.7.1",
@@ -48,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@opennextjs/cloudflare": "^1.19.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/date-fns": "^2.5.3",
