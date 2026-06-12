@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/server";
 
 function sanitizeNextPath(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
@@ -14,6 +16,9 @@ export async function GET(request: NextRequest) {
   const next = sanitizeNextPath(url.searchParams.get("next"));
 
   if (!code) {
+    await captureServerEvent("anonymous", ANALYTICS_EVENTS.LOGIN_FAILED, {
+      error: "no_code",
+    });
     return NextResponse.redirect(new URL("/auth/login?error=no_code", request.url));
   }
 
@@ -40,8 +45,17 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.session) {
+    await captureServerEvent("anonymous", ANALYTICS_EVENTS.LOGIN_FAILED, {
+      error: error?.message ?? "exchange_failed",
+    });
     return NextResponse.redirect(new URL("/auth/login?error=exchange_failed", request.url));
   }
+
+  const userId = data.session.user.id;
+  const provider =
+    (data.session.user.app_metadata?.provider as string | undefined) ?? "github";
+
+  await captureServerEvent(userId, ANALYTICS_EVENTS.LOGIN_SUCCEEDED, { provider });
 
   return response;
 }
