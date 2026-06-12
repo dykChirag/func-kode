@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   // Initialize response BEFORE createServerClient so the setAll cookie
   // adapter can write Set-Cookie headers onto it correctly.
-  let response = NextResponse.redirect(new URL(next, request.url));
+  const response = NextResponse.redirect(new URL(next, request.url));
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

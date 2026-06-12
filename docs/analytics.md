@@ -11,9 +11,11 @@ Product analytics for func(Kode) using [PostHog](https://posthog.com). All custo
 
 Add these to `.env.local` (never commit real keys). See `.env.example`.
 
-PostHog is **disabled in development** (`NODE_ENV === "development"`) — leave `NEXT_PUBLIC_POSTHOG_KEY` empty locally to avoid polluting production data.
+PostHog is **disabled during `npm run dev`** unless you set `NEXT_PUBLIC_POSTHOG_ENABLED=true`. Setting `NODE_ENV` in `.env.local` does not change this — Next.js always uses `development` in the dev server.
 
-Set `NEXT_PUBLIC_POSTHOG_HOST` to match your project region: `https://eu.i.posthog.com` (EU) or `https://us.i.posthog.com` (US). A region mismatch silently drops events.
+Leave `NEXT_PUBLIC_POSTHOG_KEY` empty (and omit `NEXT_PUBLIC_POSTHOG_ENABLED`) for normal local work. To verify events locally, set both the key and `NEXT_PUBLIC_POSTHOG_ENABLED=true`, then restart the dev server.
+
+Set `NEXT_PUBLIC_POSTHOG_HOST` to the **ingest** URL for your region: `https://eu.i.posthog.com` (EU) or `https://us.i.posthog.com` (US). The app UI URL (`eu.posthog.com`) is not the ingest host — a region mismatch silently drops events.
 
 ## Naming convention
 
@@ -81,10 +83,9 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 | `DASHBOARD_VIEWED` | `dashboard_viewed` | Dashboard |
 | `DASHBOARD_ACTION_CLICKED` | `dashboard_action_clicked` | Dashboard |
 
-Instrumented in this PR:
+Instrumented:
 
 - `LOGIN_ATTEMPTED`, `LOGIN_FAILED` in `components/login-form.tsx`
 - `SIGNUP_ATTEMPTED`, `SIGNUP_FAILED` in `components/sign-up-form.tsx`
 - `DASHBOARD_VIEWED`, `DASHBOARD_ACTION_CLICKED` in `app/dashboard/page.tsx`
-
-Remaining events are wired in follow-up issues (#111–#113).
+- Landing (#111): `PAGE_VIEWED`, `LANDING_CTA_CLICKED`, `LANDING_SECTION_VIEWED`, `GITHUB_FORK_CLICKED`, `DISCORD_LINK_CLICKED`, announcement popup events in `components/landing/*` and `components/navbar.tsx`, `components/footer.tsx`

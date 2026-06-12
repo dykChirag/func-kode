@@ -45,3 +45,11 @@ next-env.d.ts
 # IDE / editor config
 .cursor
 .vscode
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
