@@ -18,7 +18,6 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
-    "@expo/ngrok": "^4.1.0",
     "@opentelemetry/api-logs": "0.218.0",
     "@opentelemetry/exporter-logs-otlp-http": "0.218.0",
     "@opentelemetry/resources": "2.7.1",
