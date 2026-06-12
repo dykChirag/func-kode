@@ -86,6 +86,10 @@ PostHog is bootstrapped in `components/providers/posthog-provider.tsx` with `per
 Instrumented:
 
 - `LOGIN_ATTEMPTED`, `LOGIN_FAILED` in `components/login-form.tsx`
+- `LOGIN_SUCCEEDED`, `LOGIN_FAILED` (server) in `app/auth/callback/route.ts` via `lib/analytics/server.ts`
+- `LOGOUT` + `posthog.reset()` in `components/logout-button.tsx`
+- `ONBOARDING_STARTED` on mount in `app/onboard/page.tsx`; `ONBOARDING_COMPLETED` / `ONBOARDING_FAILED` / `ONBOARDING_ERROR` in `components/onboard-profile-form.tsx`
+- PostHog identity (`posthog.identify` with `email`, `github_username`) in `components/providers/posthog-provider.tsx`
 - `SIGNUP_ATTEMPTED`, `SIGNUP_FAILED` in `components/sign-up-form.tsx`
 - `DASHBOARD_VIEWED`, `DASHBOARD_ACTION_CLICKED` in `app/dashboard/page.tsx`
 - Landing (#111): `PAGE_VIEWED`, `LANDING_CTA_CLICKED`, `LANDING_SECTION_VIEWED`, `GITHUB_FORK_CLICKED`, `DISCORD_LINK_CLICKED`, announcement popup events in `components/landing/*` and `components/navbar.tsx`, `components/footer.tsx`

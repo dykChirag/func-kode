@@ -47,12 +47,6 @@ export default function OnboardProfileForm({
     setError(null);
     
     try {
-      track(ANALYTICS_EVENTS.ONBOARDING_STARTED, {
-        role_preference: form.role_preference,
-        has_bio: Boolean(form.bio),
-        has_skills: Boolean(form.skills),
-      });
-
       const supabase = createClient();
       const { error } = await supabase.from("users").update({
         github_username: form.github_username,
@@ -74,6 +68,7 @@ export default function OnboardProfileForm({
         return;
       }
       track(ANALYTICS_EVENTS.ONBOARDING_COMPLETED, {
+        github_username: form.github_username,
         role_preference: form.role_preference,
       });
       router.push("/dashboard");
