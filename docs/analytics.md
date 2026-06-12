@@ -92,4 +92,9 @@ Instrumented:
 - PostHog identity (`posthog.identify` with `email`, `github_username`) in `components/providers/posthog-provider.tsx`
 - `SIGNUP_ATTEMPTED`, `SIGNUP_FAILED` in `components/sign-up-form.tsx`
 - `DASHBOARD_VIEWED`, `DASHBOARD_ACTION_CLICKED` in `app/dashboard/page.tsx`
+- `PROJECT_SUBMIT_STARTED`, `PROJECT_SUBMITTED` in `app/submit-project/page.tsx`
+- `EVENT_VIEWED` in `app/events/[id]/page.tsx`
+- `RSVP_STARTED`, `RSVP_SUBMITTED` in `app/rsvp/page.tsx`
+- `BLOG_POST_VIEWED`, `BLOG_LIKED`, `BLOG_COMMENTED` in `app/blog/[slug]/page.tsx`
+- Admin pages (`app/admin/*`) are not instrumented — exclude from funnels via PostHog filters
 - Landing (#111): `PAGE_VIEWED`, `LANDING_CTA_CLICKED`, `LANDING_SECTION_VIEWED`, `GITHUB_FORK_CLICKED`, `DISCORD_LINK_CLICKED`, announcement popup events in `components/landing/*` and `components/navbar.tsx`, `components/footer.tsx`

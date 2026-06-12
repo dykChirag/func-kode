@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import type { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,9 @@ function RSVPPageContent() {
   const [goal, setGoal] = useState<string[]>([]);
   const [attendance, setAttendance] = useState('virtual');
   const [comments, setComments] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const rsvpStartedTracked = useRef(false);
 
   const fetchEventData = useCallback(async () => {
     if (!eventId) return;
@@ -126,8 +130,12 @@ function RSVPPageContent() {
     }
   }, [eventId, fetchEventData]);
 
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    if (!submitted && !rsvpStartedTracked.current) {
+      rsvpStartedTracked.current = true;
+      track(ANALYTICS_EVENTS.RSVP_STARTED, eventId ? { event_id: eventId } : undefined);
+    }
+  }, [eventId, submitted]);
 
   const rsvpSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -210,6 +218,10 @@ function RSVPPageContent() {
         throw error;
       }
 
+      track(ANALYTICS_EVENTS.RSVP_SUBMITTED, {
+        event_id: eventId,
+        event_name: eventData?.name,
+      });
       showToast("RSVP submitted successfully! 🎉", "success");
       setSubmitted(true);
       setName("");

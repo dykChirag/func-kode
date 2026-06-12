@@ -25,6 +25,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 function getAuthorName(user: User) {
     const githubUsername = user.user_metadata?.user_name || user.user_metadata?.preferred_username;
@@ -50,6 +51,7 @@ export default function SubmitProjectPage() {
     const supabase = supabaseRef.current;
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const projectSubmitStartedTracked = useRef(false);
 
     // Check authentication status
     useEffect(() => {
@@ -68,6 +70,11 @@ export default function SubmitProjectPage() {
                     authorName: getAuthorName(user),
                     authorEmail: user.email || ''
                 }));
+
+                if (!projectSubmitStartedTracked.current) {
+                    projectSubmitStartedTracked.current = true;
+                    track(ANALYTICS_EVENTS.PROJECT_SUBMIT_STARTED);
+                }
             }
         };
         getUser();
@@ -159,6 +166,11 @@ export default function SubmitProjectPage() {
             });
 
             if (response.ok) {
+                track(ANALYTICS_EVENTS.PROJECT_SUBMITTED, {
+                    project_name: formData.title,
+                    tech_stack: processedTags,
+                    has_github_url: Boolean(safeString(formData.githubUrl).trim()),
+                });
                 setSubmitStatus('success');
                 // Reset form on successful submission
                 setFormData({
