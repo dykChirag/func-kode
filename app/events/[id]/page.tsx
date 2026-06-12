@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, MapPin } from "lucide-react";
@@ -29,6 +30,7 @@ export default function EventPage() {
 
   const [eventData, setEventData] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const eventViewedTracked = useRef(false);
 
   const fetchEventData = useCallback(async () => {
     if (!eventId) return;
@@ -58,6 +60,15 @@ export default function EventPage() {
     fetchEventData();
   }, [fetchEventData]);
 
+  useEffect(() => {
+    if (eventData && !eventViewedTracked.current) {
+      eventViewedTracked.current = true;
+      track(ANALYTICS_EVENTS.EVENT_VIEWED, {
+        event_id: eventData.id,
+        event_name: eventData.name,
+      });
+    }
+  }, [eventData]);
 
   if (loading || !eventData) {
     return <div>Loading...</div>;
