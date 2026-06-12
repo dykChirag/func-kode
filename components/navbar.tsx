@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LANDING_ASSETS } from "@/lib/landing-assets";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { GITHUB_REPO } from "@/lib/github-stats";
 
 const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
@@ -65,10 +66,12 @@ function NavLink({
   item,
   className,
   onClick,
+  variant = "app",
 }: {
   item: NavItem;
   className: string;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  variant?: "landing" | "app";
 }) {
   if (item.external) {
     return (
@@ -77,7 +80,12 @@ function NavLink({
         target="_blank"
         rel="noopener noreferrer"
         className={className}
-        onClick={onClick}
+        onClick={(event) => {
+          if (item.label === "Discord") {
+            track(ANALYTICS_EVENTS.DISCORD_LINK_CLICKED, { source: "navbar" });
+          }
+          onClick?.(event);
+        }}
       >
         {item.label}
       </a>
@@ -85,7 +93,20 @@ function NavLink({
   }
 
   return (
-    <Link href={item.href} className={className} onClick={onClick}>
+    <Link
+      href={item.href}
+      className={className}
+      onClick={(event) => {
+        if (variant === "landing" && item.href === "/auth/login") {
+          track(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+            cta_label: item.label,
+            cta_href: item.href,
+            section: "navbar",
+          });
+        }
+        onClick?.(event);
+      }}
+    >
       {item.label}
     </Link>
   );
@@ -125,7 +146,10 @@ function GitHubForkButton({
       rel="noopener noreferrer"
       className={className}
       aria-label={`GitHub repository — ${forkCount ?? "…"} forks`}
-      onClick={onClick}
+      onClick={() => {
+        track(ANALYTICS_EVENTS.GITHUB_FORK_CLICKED);
+        onClick?.();
+      }}
     >
       <span className="flex items-center justify-center bg-white/5 px-3 py-2 text-white">
         <Github className="h-4 w-4" />
@@ -295,6 +319,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
                 key={item.label}
                 item={item}
                 className={NAV_LINK_CLASS}
+                variant={variant}
               />
             ))}
           </nav>
@@ -318,6 +343,15 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
                 <Link
                   href="/auth/login"
                   className="hidden h-10 min-h-[44px] items-center justify-center rounded-full bg-white px-5 text-sm font-bold tracking-[-0.42px] text-black transition-opacity hover:opacity-90 sm:inline-flex"
+                  onClick={() => {
+                    if (variant === "landing") {
+                      track(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+                        cta_label: "Connect",
+                        cta_href: "/auth/login",
+                        section: "navbar",
+                      });
+                    }
+                  }}
                 >
                   Connect
                 </Link>
@@ -364,6 +398,7 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
               key={item.label}
               item={item}
               className={NAV_LINK_MOBILE_CLASS}
+              variant={variant}
               onClick={close}
             />
           ))}
@@ -411,7 +446,16 @@ export function Navbar({ forkCount = null, variant = "app" }: NavbarProps) {
             <Link
               href="/auth/login"
               className="mt-4 inline-flex h-11 min-h-[44px] w-full items-center justify-center rounded-full bg-white px-6 text-sm font-bold text-black transition-opacity hover:opacity-90"
-              onClick={close}
+              onClick={() => {
+                if (variant === "landing") {
+                  track(ANALYTICS_EVENTS.LANDING_CTA_CLICKED, {
+                    cta_label: "Connect",
+                    cta_href: "/auth/login",
+                    section: "navbar",
+                  });
+                }
+                close();
+              }}
             >
               Connect
             </Link>
