@@ -8,7 +8,9 @@
 
 Provides cached GitHub repository stats (fork count, star count) to the Navbar and any other UI that needs them — without making unauthenticated client-side calls to the GitHub API on every page load.
 
-> ⚠️ Unauthenticated GitHub API calls are rate-limited to **60 requests/hour per IP**. This route and the shared `lib/github-stats.ts` helper cache the response server-side.
+> ⚠️ GitHub requires a `User-Agent` header on REST API requests. Cloudflare Workers do not send one by default, which returns **403** and `null` stats unless `lib/github-stats.ts` sets it explicitly.
+>
+> Unauthenticated calls are also rate-limited to **60 requests/hour per IP**. Set `GITHUB_TOKEN` in production for a 5,000 req/hr limit. Responses are cached server-side for 1 hour on success; failures are not cached.
 
 ---
 
@@ -51,7 +53,13 @@ Shared fetch logic lives in `lib/github-stats.ts`:
 ```ts
 export async function getGitHubStats() {
   const res = await fetch(`https://api.github.com/repos/patchid/func-kode`, {
-    headers: { Accept: "application/vnd.github+json" },
+    headers: {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "func-kode-stats",
+      ...(process.env.GITHUB_TOKEN
+        ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+        : {}),
+    },
     next: { revalidate: 3600 },
   });
   // returns { forks, stars, repo }
