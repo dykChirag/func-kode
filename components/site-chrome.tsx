@@ -29,10 +29,11 @@ export function SiteChrome({
 }) {
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  const isDashboard = pathname.startsWith("/dashboard");
 
   return (
     <ForkCountContext.Provider value={forkCount}>
-      {isLandingPage ? (
+      {isLandingPage || isDashboard ? (
         <div className="flex min-h-screen flex-col">{children}</div>
       ) : (
         <div className="flex min-h-screen flex-col">

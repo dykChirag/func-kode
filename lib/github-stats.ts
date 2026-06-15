@@ -15,7 +15,10 @@ const FALLBACK_STATS: GitHubStats = {
 export async function getGitHubStats(): Promise<GitHubStats> {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
-      headers: { Accept: "application/vnd.github+json" },
+      headers: {
+        Accept: "application/vnd.github+json",
+        ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+      },
       next: { revalidate: 3600 },
     });
 
