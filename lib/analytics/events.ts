@@ -3,6 +3,8 @@ export const ANALYTICS_EVENTS = {
 
   LANDING_CTA_CLICKED: "landing_cta_clicked",
   LANDING_SECTION_VIEWED: "landing_section_viewed",
+  FOOTER_LINK_CLICKED: "footer_link_clicked",
+  FOOTER_NEWSLETTER_SUBMITTED: "footer_newsletter_submitted",
   GITHUB_FORK_CLICKED: "github_fork_clicked",
   DISCORD_LINK_CLICKED: "discord_link_clicked",
   ANNOUNCEMENT_POPUP_SHOWN: "announcement_popup_shown",
