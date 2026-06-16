@@ -9,6 +9,7 @@ const LANDING_SECTION_IDS = [
   "for-teams",
   "for-developers",
   "contact-us",
+  "landing-footer",
 ] as const;
 
 /**
