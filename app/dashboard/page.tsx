@@ -6,7 +6,7 @@ export default function DashboardPage() {
       style={{
         position: "relative",
         width: "100%",
-        minHeight: "calc(1654 / 1920 * 100vw)",
+        minHeight: "max(100vh, calc(1654 / 1920 * 100vw))",
         background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
         color: "white",
         fontFamily: '"Poppins", sans-serif',
