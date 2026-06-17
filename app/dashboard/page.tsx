@@ -178,16 +178,17 @@ function SideLabel({ children }: { children: string }) {
 /* ── Page ── */
 export default function DashboardPage() {
   const [open, setOpen] = useState(true);
-  const [scale, setScale] = useState(() =>
-    typeof window !== "undefined" ? Math.min(1, document.documentElement.clientWidth / 1920) : 1
-  );
-  const [viewH, setViewH] = useState(() =>
-    typeof window !== "undefined" ? window.innerHeight : 900
-  );
+  const [mounted, setMounted] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [viewH, setViewH] = useState(900);
 
   useLayoutEffect(() => {
+    setMounted(true);
     const update = () => {
-      setScale(Math.min(1, document.documentElement.clientWidth / 1920));
+      setScale(Math.min(
+        1,
+        document.documentElement.clientWidth / 1920
+      ));
       setViewH(window.innerHeight);
     };
     update();
@@ -195,25 +196,46 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const outerH = Math.max(scale * 1654, viewH);
   const innerMinH = Math.max(1654, Math.ceil(viewH / scale));
 
+  const currentScale = mounted ? scale : 1;
+  const currentInnerMinH = mounted ? innerMinH : "100vh";
+
   return (
-    <div suppressHydrationWarning style={{ width: "100%", height: outerH, overflow: "hidden", background: "transparent" }}>
     <div
       suppressHydrationWarning
-      className={jakarta.className}
       style={{
-        position: "relative",
-        width: 1920,
-        minHeight: innerMinH,
-        transformOrigin: "top left",
-        transform: `scale(${scale})`,
+        width: "100%",
+        height: "100vh",
+        overflowX: "hidden",
+        overflowY: "auto",
         background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
-        color: "white",
-        overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          width: 1920 * currentScale,
+          height: typeof currentInnerMinH === "number" ? currentInnerMinH * currentScale : currentInnerMinH,
+          overflow: "hidden",
+          position: "relative",
+          opacity: mounted ? 1 : 0,
+          transition: "opacity 0.15s ease-in-out",
+        }}
+      >
+        <div
+          suppressHydrationWarning
+          className={jakarta.className}
+          style={{
+            position: "relative",
+            width: 1920,
+            minHeight: currentInnerMinH,
+            transformOrigin: "top left",
+            transform: `scale(${currentScale})`,
+            background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
+            color: "white",
+            overflow: "hidden",
+          }}
+        >
       <style>{`
         .nav-item {
           transition: background 0.2s ease, color 0.2s ease !important;
@@ -627,7 +649,8 @@ export default function DashboardPage() {
         transition: "margin-left 0.25s ease",
       }}>
       </main>
-    </div>
+        </div>
+      </div>
     </div>
   );
 }
