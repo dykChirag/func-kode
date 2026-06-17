@@ -20,7 +20,8 @@ docs/
 ├── components/
 │   ├── navbar.md                ← Navbar — auth, fork count, version badge ✅
 │   ├── landing-background.md   ← Background layer system
-│   └── hero-section.md         ← Hero layout & responsive behaviour
+│   ├── hero-section.md         ← Hero layout & responsive behaviour
+│   └── dashboard.md            ← Dashboard layout & responsive sidebar ✅
 └── api/
     └── github-stats.md          ← /api/github-stats route ✅
 ```
