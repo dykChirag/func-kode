@@ -2,6 +2,7 @@
 import { useState, useLayoutEffect } from "react";
 import Image from "next/image";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import { SidebarToggle } from "@/components/sidebar-toggle";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -16,8 +17,6 @@ const poppins = Poppins({
 });
 
 /* ── Icons ── */
-const IcMenu     = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
-
 const IcHome     = () => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_2009_746)">
@@ -156,7 +155,7 @@ function NavItem({ icon, label, active = false }: { icon: React.ReactNode; label
       >
         {icon}
       </div>
-      <span style={{ fontSize: 14, fontWeight: active ? 600 : 500, lineHeight: "100%" }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "100%" }}>{label}</span>
     </button>
   );
 }
@@ -166,7 +165,8 @@ function SideLabel({ children }: { children: string }) {
     <div style={{
       color: "white",
       fontSize: 12,
-      fontWeight: 600,
+      fontWeight: 500,
+      lineHeight: "150%",
       margin: "24px 0 10px 14px",
       fontFamily: poppins.style.fontFamily,
     }}>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
   const innerMinH = Math.max(1654, Math.ceil(viewH / scale));
 
   return (
-    <div suppressHydrationWarning style={{ width: "100%", height: outerH, overflow: "hidden", background: "#0D1527" }}>
+    <div suppressHydrationWarning style={{ width: "100%", height: outerH, overflow: "hidden", background: "transparent" }}>
     <div
       suppressHydrationWarning
       className={jakarta.className}
@@ -453,7 +453,7 @@ export default function DashboardPage() {
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingLeft: 6 }}>
             <Image src="/landing/logo.png" alt="func(kode)" width={40} height={36} style={{ borderRadius: 6 }} />
-            <span style={{ fontSize: 16, fontWeight: 600, color: "white", letterSpacing: "-0.015em" }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: "white", fontFamily: poppins.style.fontFamily }}>
               func(kode)
             </span>
           </div>
@@ -569,27 +569,27 @@ export default function DashboardPage() {
               {/* Real text overlaid */}
               <div style={{
                 position: "absolute",
-                top: 62,
+                top: 72,
                 left: 16,
                 right: 16,
                 color: "white",
                 fontSize: 14,
                 fontWeight: 700,
-                lineHeight: "120%",
+                lineHeight: "140%",
                 fontFamily: poppins.style.fontFamily,
               }}>
                 Need help?
               </div>
               <div style={{
                 position: "absolute",
-                top: 80,
+                top: 96,
                 left: 16,
                 right: 16,
-                color: "rgba(255,255,255,0.8)",
-                fontSize: 9,
+                color: "white",
+                fontSize: 12,
                 fontWeight: 400,
-                lineHeight: 1.5,
-                fontFamily: jakarta.style.fontFamily,
+                lineHeight: "100%",
+                fontFamily: poppins.style.fontFamily,
               }}>
                 Please check our docs
               </div>
@@ -603,10 +603,9 @@ export default function DashboardPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 color: "white",
-                fontSize: 9.5,
+                fontSize: 10,
                 fontWeight: 700,
-                letterSpacing: "0.12em",
-                fontFamily: jakarta.style.fontFamily,
+                fontFamily: poppins.style.fontFamily,
                 pointerEvents: "none",
               }}>
                 DOCUMENTATION
@@ -616,33 +615,8 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* ── Single toggle button — slides with sidebar edge ── */}
-      <button
-        onClick={() => setOpen(o => !o)}
-        aria-label="Toggle sidebar"
-        suppressHydrationWarning
-        style={{
-          position: "absolute",
-          top: 24,
-          left: open ? 284 : 20,
-          zIndex: 21,
-          width: 32,
-          height: 32,
-          background: "rgba(255,255,255,0.08)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          color: "white",
-          transition: "left 0.25s ease",
-        }}
-      >
-        <IcMenu />
-      </button>
+      {/* ── Sidebar toggle ── */}
+      <SidebarToggle open={open} onToggle={() => setOpen(o => !o)} />
 
       {/* Main content wrapper */}
       <main style={{
