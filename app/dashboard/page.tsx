@@ -611,7 +611,6 @@ export default function DashboardPage() {
         zIndex: 2,
         transition: "margin-left 0.25s ease",
       }}>
-        {/* Chirag builds dashboard content here */}
       </main>
     </div>
     </div>
