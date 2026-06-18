@@ -39,7 +39,7 @@ The dashboard background combines CSS gradients and embedded SVG vectors to matc
 ## 2. Sidemenu (Sidebar)
 
 The sidebar is built with a glassmorphism theme and custom absolute coordinates:
-*   **Dimensions**: Width is `264px` and height is `1135px`. It is spaced `10px` away from the top and left edges of the viewport container.
+*   **Dimensions**: Width is `264px` and height is `1153px`. It is spaced `10px` away from the top and left edges of the viewport container.
 *   **Glassmorphism**: Uses a custom gradient background overlay with a `backdrop-filter: blur(60px)`.
 *   **Collapsible State**: 
     *   Toggled by a floating hamburger menu button.
@@ -55,7 +55,7 @@ The sidebar is built with a glassmorphism theme and custom absolute coordinates:
 
 To match the design system across all standard screen sizes, the layout uses a client-side scale calculation:
 *   **Origin**: scaled around `transformOrigin: "top left"`.
-*   **Formula**: `scale = Math.min(1, viewportWidth / 1920)`. Capped at a maximum scale of `1` so it doesn't stretch disproportionately on ultra-wide screens, leaving a solid `#0D1527` background gap on the right.
+*   **Formula**: `scale = Math.min(1, viewportWidth / 1920)`. Capped at a maximum scale of `1` so it doesn't stretch disproportionately on ultra-wide screens.
 *   **Scrollbar Correction**: To prevent right-edge clipping on viewports containing a vertical scrollbar, the layout uses `document.documentElement.clientWidth` instead of `window.innerWidth`.
     *   *Why*: `window.innerWidth` includes the scrollbar track width. Calculating scale with it makes the page slightly wider than the available visible screen, cutting off the rightmost content padding. Utilizing `clientWidth` guarantees it scales to fit the exact visible width.
 
@@ -67,25 +67,35 @@ To match the design system across all standard screen sizes, the layout uses a c
 // app/dashboard/page.tsx
 export default function DashboardPage() {
   const [open, setOpen] = useState(true);
-  const [scale, setScale] = useState(() =>
-    typeof window !== "undefined" ? Math.min(1, document.documentElement.clientWidth / 1920) : 1
-  );
+  const [mounted, setMounted] = useState(false);
+  // Always start at 1 — real value set in useLayoutEffect after hydration
+  const [scale, setScale] = useState(1);
+  const [viewH, setViewH] = useState(900);
 
-  // Re-calculates on resize
   useLayoutEffect(() => {
+    setMounted(true);
     const update = () => {
       setScale(Math.min(1, document.documentElement.clientWidth / 1920));
+      setViewH(window.innerHeight);
     };
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  const innerMinH = Math.max(1654, Math.ceil(viewH / scale));
+  const currentScale = mounted ? scale : 1;
+  const currentInnerMinH = mounted ? innerMinH : "100vh";
+  const currentSidebarMaxH = mounted ? Math.min(1153, Math.ceil(viewH / scale) - 20) : 1153;
+
   return (
-    <div style={{ width: "100%", overflow: "hidden", background: "#0D1527" }}>
-      <div style={{ width: 1920, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-        <aside>...</aside>
-        <main>...</main>
+    <div style={{ width: "100%", height: "100vh", overflowX: "hidden", overflowY: "auto", background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)" }}>
+      <SidebarToggle open={open} onToggle={() => setOpen(!open)} scale={currentScale} />
+      <div style={{ width: 1920 * currentScale, height: typeof currentInnerMinH === "number" ? currentInnerMinH * currentScale : currentInnerMinH, overflow: "hidden", position: "relative", opacity: mounted ? 1 : 0, transition: "opacity 0.15s ease-in-out" }}>
+        <div style={{ width: 1920, minHeight: currentInnerMinH, transform: `scale(${currentScale})`, transformOrigin: "top left" }}>
+          <aside style={{ height: currentSidebarMaxH, overflowY: "auto" }}>...</aside>
+          <main>...</main>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,13 @@
 "use client";
 import { useState, useLayoutEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import { SidebarToggle } from "@/components/sidebar-toggle";
+import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -64,14 +69,14 @@ const IcFile     = () => (
 );
 
 const IcCalendar = () => (
-  <svg width="15" height="15" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M13.0236 2.65463C13.1371 2.64152 13.3926 2.64641 13.5146 2.64586L14.428 2.64209C14.3955 3.02588 14.4175 3.62467 14.4133 4.02975C14.5494 4.02627 14.6856 4.02385 14.8218 4.02248C15.3054 4.01947 15.6995 4.0716 16.0572 4.42191C16.548 4.90262 16.454 5.44326 16.4526 6.07311L16.451 7.86701L16.4536 14.5706C16.4546 15.1516 16.509 15.4959 16.0629 15.9585C15.6432 16.3936 15.1078 16.369 14.5458 16.3657L8.13686 16.3655L6.34066 16.3663C6.039 16.3664 5.5315 16.3812 5.24998 16.3372C4.98107 16.2962 4.73174 16.1721 4.53695 15.9823C4.2218 15.6784 4.1015 15.2909 4.10156 14.8616C4.10182 12.7047 4.10457 10.5459 4.10637 8.38924L4.10762 6.34828C4.1083 5.49303 3.98402 4.5398 4.95373 4.13037C5.28307 3.99133 5.8123 4.02391 6.17555 4.01979C6.15727 3.5832 6.17916 3.09932 6.16715 2.64961C6.58295 2.66246 7.06615 2.65303 7.4826 2.64801L7.52553 2.65426C7.56365 2.71236 7.55326 3.87645 7.53867 4.0273C9.35936 4.00258 11.2093 4.03047 13.0346 4.02148C13.008 3.63012 13.0251 3.05916 13.0236 2.65463ZM5.49121 15.0006L11.73 14.9957C12.8108 14.996 14.0284 15.0223 15.0976 14.9825C15.0413 12.8048 15.1146 10.6038 15.0842 8.42418C15.0797 8.10281 15.0816 7.76535 15.0958 7.44479C14.9458 7.46283 14.3148 7.44354 14.1225 7.44326L11.8411 7.44221L7.53145 7.4425C6.87937 7.44266 6.12805 7.46404 5.48932 7.44596L5.49121 15.0006Z" fill="currentColor"/>
     <path d="M12.6688 8.82196C12.8039 8.92255 13.2347 9.38798 13.4038 9.54745C13.1809 9.78343 12.9051 10.0403 12.6705 10.2756L10.5485 12.3952C10.1465 12.7971 9.71168 13.2177 9.32695 13.6331C8.85465 13.1478 8.37699 12.6677 7.8941 12.1929C7.77908 12.074 7.20356 11.5549 7.20313 11.4434C7.20262 11.3055 7.72772 10.8485 7.8482 10.7261C8.03463 10.8668 8.1634 11.0195 8.32713 11.1748C8.65482 11.4857 9.00178 11.8855 9.33768 12.1784C9.64115 11.8149 10.1939 11.2969 10.5475 10.9447L12.6688 8.82196Z" fill="currentColor"/>
   </svg>
 );
 
 const IcUsers    = () => (
-  <svg width="15" height="15" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="13.965" height="13" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M4.85173 8.05393C4.97255 8.04055 5.25125 8.04875 5.38493 8.0488L6.43072 8.04947L7.99431 8.04876C8.33985 8.04846 8.89722 8.0178 9.22656 8.10918C9.4862 8.18121 9.80545 8.45358 9.92795 8.70318C10.1395 9.13421 10.0503 9.68533 9.91431 10.1286C9.79076 10.5174 9.4301 11.0509 9.10437 11.309C8.97528 11.4113 8.71487 11.5531 8.56318 11.6286C8.11115 11.8551 7.78365 11.9371 7.28171 11.9906C6.50762 12.0777 5.72555 11.9227 5.04321 11.5469C4.89574 11.466 4.74685 11.3809 4.6206 11.2781C3.82496 10.6304 3.17865 8.82921 4.32316 8.2038C4.50814 8.10272 4.64752 8.07405 4.85173 8.05393Z" fill="currentColor"/>
     <path d="M2.44489 4.88005C3.15368 4.85231 3.93398 4.90553 4.63753 4.87115C4.49588 5.21889 4.46325 5.74397 4.53608 6.10577C4.61255 6.48558 4.83701 6.99855 5.12483 7.26439C5.08591 7.26265 5.04696 7.26161 5.00799 7.26124C4.33598 7.25243 3.91777 7.41935 3.44684 7.87856C3.32357 7.99696 3.08969 8.40542 3.03698 8.56616C2.79243 8.41567 2.56151 8.38057 2.30681 8.15628C1.73264 7.65062 1.39723 7.08825 1.33146 6.31536C1.30046 5.95107 1.33425 5.624 1.57644 5.33499C1.79287 5.07674 2.10866 4.90737 2.44489 4.88005Z" fill="currentColor"/>
     <path d="M9.13715 4.87207C9.30512 4.88148 9.50081 4.87529 9.67155 4.87663C10.1871 4.88068 10.705 4.8741 11.2204 4.8771C11.5895 4.87924 11.8971 5.03518 12.1484 5.29925C12.3724 5.53475 12.4592 5.86478 12.4394 6.18813C12.3836 7.10016 12.0726 7.58084 11.4344 8.1706C11.2586 8.3366 10.9546 8.44506 10.7313 8.56072C10.3066 7.62681 9.68118 7.22219 8.6438 7.26582C8.71739 7.19164 8.82035 7.04652 8.8772 6.95905C9.18849 6.48577 9.31933 5.91637 9.24587 5.35468C9.22406 5.19911 9.17043 5.02832 9.13715 4.87207Z" fill="currentColor"/>
@@ -116,28 +121,28 @@ const IcCog      = () => (
 );
 
 /* ── Sub-components ── */
-function NavItem({ icon, label, active = false }: { icon: React.ReactNode; label: string; active?: boolean }) {
-  return (
-    <button 
-      className="nav-item"
-      style={{
-        width: "100%",
-        minHeight: 44,
-        background: active ? "#1A1F37" : "transparent",
-        border: "none",
-        borderRadius: 15,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 16px",
-        gap: 12,
-        cursor: "pointer",
-        marginBottom: 6,
-        color: "#FFFFFF",
-        fontFamily: poppins.style.fontFamily,
-        textAlign: "left",
-      }}
-    >
-      <div 
+function NavItem({ icon, label, active = false, href }: { icon: React.ReactNode; label: string; active?: boolean; href?: string }) {
+  const sharedStyle: React.CSSProperties = {
+    width: 219.5,
+    minHeight: 54,
+    alignSelf: "center",
+    background: active ? "#1A1F37" : "transparent",
+    border: "none",
+    borderRadius: 15,
+    display: "flex",
+    alignItems: "center",
+    padding: "0 16px",
+    gap: 12,
+    cursor: "pointer",
+    marginBottom: 0,
+    color: "#FFFFFF",
+    fontFamily: poppins.style.fontFamily,
+    textAlign: "left",
+    textDecoration: "none",
+  };
+  const content = (
+    <>
+      <div
         className="icon-base"
         style={{
           width: 30,
@@ -155,19 +160,32 @@ function NavItem({ icon, label, active = false }: { icon: React.ReactNode; label
       >
         {icon}
       </div>
-      <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "100%" }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 400, lineHeight: "100%" }}>{label}</span>
+    </>
+  );
+  if (href) {
+    return <Link href={href} className="nav-item" style={sharedStyle}>{content}</Link>;
+  }
+  return (
+    <button className="nav-item" style={sharedStyle}>
+      {content}
     </button>
   );
 }
 
-function SideLabel({ children }: { children: string }) {
+function SideLabel({ children, marginTop = 24, marginBottom = 12 }: { children: string; marginTop?: number; marginBottom?: number }) {
   return (
     <div style={{
-      color: "white",
+      display: "flex",
+      width: 105,
+      height: 18,
+      flexDirection: "column",
+      justifyContent: "center",
+      color: "#FFF",
       fontSize: 12,
       fontWeight: 500,
       lineHeight: "150%",
-      margin: "24px 0 10px 14px",
+      margin: `${marginTop}px 0 ${marginBottom}px 14px`,
       fontFamily: poppins.style.fontFamily,
     }}>
       {children}
@@ -177,6 +195,8 @@ function SideLabel({ children }: { children: string }) {
 
 /* ── Page ── */
 export default function DashboardPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [scale, setScale] = useState(1);
@@ -196,10 +216,19 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  const handleLogout = async () => {
+    track(ANALYTICS_EVENTS.LOGOUT);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    posthog.reset();
+    router.push("/auth/login");
+  };
+
   const innerMinH = Math.max(1654, Math.ceil(viewH / scale));
 
   const currentScale = mounted ? scale : 1;
   const currentInnerMinH = mounted ? innerMinH : "100vh";
+  const currentSidebarMaxH = mounted ? Math.min(1153, Math.ceil(viewH / scale) - 20) : 1153;
 
   return (
     <div
@@ -212,6 +241,9 @@ export default function DashboardPage() {
         background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
       }}
     >
+      {/* ── Sidebar toggle ── */}
+      <SidebarToggle open={open} onToggle={() => setOpen(o => !o)} scale={currentScale} />
+
       <div
         style={{
           width: 1920 * currentScale,
@@ -236,36 +268,6 @@ export default function DashboardPage() {
             overflow: "hidden",
           }}
         >
-      <style>{`
-        .nav-item {
-          transition: background 0.2s ease, color 0.2s ease !important;
-        }
-        .nav-item:hover {
-          background: rgba(255, 255, 255, 0.08) !important;
-          color: white !important;
-        }
-        .logout-btn {
-          transition: transform 0.15s ease, opacity 0.15s ease !important;
-        }
-        .logout-btn:hover {
-          transform: scale(1.02);
-          opacity: 0.9;
-        }
-        .logout-btn:active {
-          transform: scale(0.98);
-        }
-        .doc-btn {
-          transition: background 0.15s ease, transform 0.15s ease !important;
-        }
-        .doc-btn:hover {
-          background: #111739 !important;
-          opacity: 0.9;
-          transform: translateY(-1px);
-        }
-        .doc-btn:active {
-          transform: translateY(1px);
-        }
-      `}</style>
       {/* Background SVG — viewBox clipped to the rect area (x=49,y=211.422,w=1920,h=1654) so no dead space at top/bottom. Fills container 100%. */}
       <svg
         aria-hidden="true"
@@ -419,63 +421,76 @@ export default function DashboardPage() {
       </svg>
 
       {/* ── Sidebar ── */}
-      <aside style={{
-        position: "absolute",
-        left: 10,
-        top: 10,
-        width: 264,
-        height: 1135,
-        zIndex: 20,
-        transform: open ? "translateX(0)" : "translateX(-290px)",
-        transition: "transform 0.25s ease",
-        borderRadius: 20,
-        backdropFilter: "blur(60px)",
-        WebkitBackdropFilter: "blur(60px)",
-        overflow: "hidden",
-        border: "none",
-        boxShadow: "none",
-      }}>
-        {/* Exact Figma Background SVG */}
-        <div style={{
+      <aside
+        className={`sidebar-scrollbar ${poppins.className}`}
+        style={{
           position: "absolute",
-          top: 0,
-          left: 0,
+          left: 10,
+          top: 10,
           width: 264,
-          height: "100%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}>
-          <svg width="264" height="1135" viewBox="0 0 264 1135" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
-            <foreignObject x="-120" y="-120" width="504" height="1375">
-              <div style={{ backdropFilter: "blur(60px)", WebkitBackdropFilter: "blur(60px)", clipPath: "url(#bgblur_0_2009_654_clip_path)", height: "100%", width: "100%" }}></div>
-            </foreignObject>
-            <rect width="264" height="1135" rx="20" fill="url(#paint0_linear_2009_654)" />
-            <defs>
-              <clipPath id="bgblur_0_2009_654_clip_path" transform="translate(120 120)">
-                <rect width="264" height="1135" rx="20" />
-              </clipPath>
-              <linearGradient id="paint0_linear_2009_654" x1="186.5" y1="351.743" x2="335.712" y2="365.651" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#060B26" stopOpacity="0.94" />
-                <stop offset="1" stopColor="#1A1F37" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-
+          height: currentSidebarMaxH,
+          zIndex: 20,
+          transform: open ? "translateX(0)" : "translateX(-290px)",
+          transition: "transform 0.25s ease, height 0.25s ease",
+          borderRadius: 20,
+          backdropFilter: "blur(60px)",
+          WebkitBackdropFilter: "blur(60px)",
+          overflowY: "auto",
+          overflowX: "hidden",
+          border: "none",
+          boxShadow: "none",
+        }}
+      >
         {/* Sidebar content */}
-        <div style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "32px 18px 24px",
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}>
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            padding: "32px 18px 36px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            height: 1153,
+          }}
+        >
+          {/* Exact Figma Background SVG */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: -1,
+              pointerEvents: "none",
+            }}
+          >
+            <svg
+              viewBox="0 0 264 1153"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "100%", height: "100%" }}
+              preserveAspectRatio="none"
+            >
+              <foreignObject x="-120" y="-120" width="504" height="1349">
+                <div style={{ backdropFilter: "blur(60px)", WebkitBackdropFilter: "blur(60px)", clipPath: "url(#bgblur_0_2009_654_clip_path)", height: "100%", width: "100%" }}></div>
+              </foreignObject>
+              <rect width="264" height="1153" rx="20" fill="url(#paint0_linear_2009_654)" />
+              <defs>
+                <clipPath id="bgblur_0_2009_654_clip_path" transform="translate(120 120)">
+                  <rect width="264" height="1153" rx="20" />
+                </clipPath>
+                <linearGradient id="paint0_linear_2009_654" x1="186.5" y1="351.743" x2="335.712" y2="365.651" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#060B26" stopOpacity="0.94" />
+                  <stop offset="1" stopColor="#1A1F37" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingLeft: 6 }}>
             <Image src="/landing/logo.png" alt="func(kode)" width={40} height={36} style={{ borderRadius: 6 }} />
-            <span style={{ fontSize: 14, fontWeight: 500, color: "white", fontFamily: poppins.style.fontFamily }}>
+            <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
               func(kode)
             </span>
           </div>
@@ -495,27 +510,27 @@ export default function DashboardPage() {
           </div>
 
           {/* Main nav */}
-          <NavItem icon={<IcHome />}      label="Dashboard" active />
-          <NavItem icon={<IcCompass />}   label="Explore" />
-          <NavItem icon={<IcBriefcase />} label="Projects" />
-          <NavItem icon={<IcFile />}      label="Docs" />
+          <NavItem icon={<IcHome />}      label="Dashboard" active={pathname === "/dashboard"} href="/dashboard" />
+          <NavItem icon={<IcCompass />}   label="Explore" active={pathname === "/explore"} href="/explore" /> {/* TODO: Add route when /explore page is created */}
+          <NavItem icon={<IcBriefcase />} label="Projects" active={pathname === "/projects"} href="/projects" /> {/* TODO: Add route when /projects page is created */}
+          <NavItem icon={<IcFile />}      label="Docs" active={pathname === "/docs" || pathname?.startsWith("/docs")} href="/docs" /> {/* TODO: Add route when /docs page is created */}
 
-          <SideLabel>Community</SideLabel>
-          <NavItem icon={<IcCalendar />}  label="Events" />
-          <NavItem icon={<IcUsers />}     label="Discussions" />
-          <NavItem icon={<IcRocket />}    label="Leader Board" />
+          <SideLabel marginTop={12} marginBottom={12}>Community</SideLabel>
+          <NavItem icon={<IcCalendar />}  label="Events" active={pathname === "/events"} href="/events" /> {/* TODO: Add route when /events page is created */}
+          <NavItem icon={<IcUsers />}     label="Discussions" active={pathname === "/discussions"} href="/discussions" /> {/* TODO: Add route when /discussions page is created */}
+          <NavItem icon={<IcRocket />}    label="Leader Board" active={pathname === "/leaderboard"} href="/leaderboard" /> {/* TODO: Add route when /leaderboard page is created */}
 
-          <SideLabel>Profile</SideLabel>
-          <NavItem icon={<IcBell />}      label="Notifications" />
-          <NavItem icon={<IcActivity />}  label="Activity Logs" />
-          <NavItem icon={<IcCog />}       label="Settings" />
+          <SideLabel marginTop={20} marginBottom={12}>Profile</SideLabel>
+          <NavItem icon={<IcBell />}      label="Notifications" active={pathname === "/notifications"} href="/notifications" /> {/* TODO: Add route when /notifications page is created */}
+          <NavItem icon={<IcActivity />}  label="Activity Logs" active={pathname === "/activity-logs"} href="/activity-logs" /> {/* TODO: Add route when /activity-logs page is created */}
+          <NavItem icon={<IcCog />}       label="Settings" active={pathname === "/settings"} href="/settings" /> {/* TODO: Add route when /settings page is created */}
 
           {/* Bottom */}
           <div style={{ marginTop: "auto" }}>
             {/* Log Out Button */}
             <button
               className="logout-btn"
-              onClick={() => console.log("Logout clicked")}
+              onClick={handleLogout}
               aria-label="Log out"
               style={{
                 width: 186,
@@ -531,26 +546,33 @@ export default function DashboardPage() {
                 position: "relative",
                 borderRadius: 12,
                 overflow: "hidden",
+                backdropFilter: "blur(5px)",
+                WebkitBackdropFilter: "blur(5px)",
               }}
             >
               <svg width="186" height="35" viewBox="0 0 186 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}>
-                <rect width="186" height="35" rx="12" fill="url(#paint0_logout)"/>
+                <g data-figma-bg-blur-radius="10">
+                  <rect width="186" height="35" rx="12" fill="url(#paint0_linear_159_198)"/>
+                </g>
                 <defs>
-                  <linearGradient id="paint0_logout" x1="89" y1="0" x2="105.006" y2="48.6591" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="paint0_linear_159_198" x1="89" y1="-6.20161e-07" x2="105.006" y2="48.6591" gradientUnits="userSpaceOnUse">
                     <stop stopColor="#470137"/>
                     <stop offset="1" stopColor="#DC395F"/>
                   </linearGradient>
                 </defs>
               </svg>
-              <span style={{
-                position: "relative",
-                color: "white",
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                fontFamily: poppins.style.fontFamily,
-              }}>
-                Logout
+              <span
+                style={{
+                  position: "relative",
+                  zIndex: 2,
+                  color: "#FFF",
+                  fontFamily: poppins.style.fontFamily,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  lineHeight: "100%",
+                }}
+              >
+                Log Out
               </span>
             </button>
 
@@ -615,21 +637,32 @@ export default function DashboardPage() {
               }}>
                 Please check our docs
               </div>
-              <div style={{
-                position: "absolute",
-                top: 118.5,
-                left: 16,
-                width: 186,
-                height: 35,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontSize: 10,
-                fontWeight: 700,
-                fontFamily: poppins.style.fontFamily,
-                pointerEvents: "none",
-              }}>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="View documentation"
+                onClick={() => router.push("/docs")}
+                onKeyDown={(e) => e.key === "Enter" && router.push("/docs")}
+                className="doc-btn"
+                style={{
+                  position: "absolute",
+                  top: 118.5,
+                  left: 16,
+                  width: 186,
+                  height: 35,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#FFF",
+                  textAlign: "center",
+                  fontFamily: poppins.style.fontFamily,
+                  fontSize: 10,
+                  fontStyle: "normal",
+                  fontWeight: 700,
+                  lineHeight: "100%",
+                  cursor: "pointer",
+                }}
+              >
                 DOCUMENTATION
               </div>
             </div>
@@ -637,8 +670,7 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* ── Sidebar toggle ── */}
-      <SidebarToggle open={open} onToggle={() => setOpen(o => !o)} />
+
 
       {/* Main content wrapper */}
       <main style={{

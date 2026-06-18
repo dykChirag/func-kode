@@ -19,19 +19,20 @@ const IcMenu = () => (
 interface SidebarToggleProps {
   open: boolean;
   onToggle: () => void;
+  scale?: number;
 }
 
-export function SidebarToggle({ open, onToggle }: SidebarToggleProps) {
+export function SidebarToggle({ open, onToggle, scale = 1 }: SidebarToggleProps) {
   return (
     <button
       onClick={onToggle}
       aria-label="Toggle sidebar"
       suppressHydrationWarning
       style={{
-        position: "absolute",
-        top: 24,
-        left: open ? 284 : 20,
-        zIndex: 21,
+        position: "fixed",
+        top: 24 * scale,
+        left: open ? 284 * scale : 20,
+        zIndex: 9999,
         width: 32,
         height: 32,
         background: "rgba(255,255,255,0.08)",
@@ -44,7 +45,7 @@ export function SidebarToggle({ open, onToggle }: SidebarToggleProps) {
         justifyContent: "center",
         cursor: "pointer",
         color: "white",
-        transition: "left 0.25s ease",
+        transition: "left 0.25s ease, top 0.25s ease",
       }}
     >
       <IcMenu />
