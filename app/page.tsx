@@ -1,4 +1,4 @@
-import { Poppins } from "next/font/google";
+import { Archivo, Poppins } from "next/font/google";
 import { LandingBackground } from "@/components/landing/landing-background";
 import { LandingPageContent } from "@/components/landing/landing-page-content";
 import { EventAnnouncementPopup } from "@/components/landing/event-announcement-popup";
@@ -12,6 +12,13 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600", "700", "800"],
   display: "swap",
+});
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["500"],
+  display: "swap",
+  variable: "--font-archivo",
 });
 
 /**
@@ -29,7 +36,7 @@ const poppins = Poppins({
  */
 export default function HomePage() {
   return (
-    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className}`}>
+    <div className={`relative w-full overflow-x-hidden min-h-screen bg-landing-dark ${poppins.className} ${archivo.variable}`}>
       <LandingBackground />
       <LandingPageContent />
       <EventAnnouncementPopup />
