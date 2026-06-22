@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildPrEventJob, isSupportedWebhook } from "@/lib/github/build-pr-event-job";
+import { parseGitHubWebhookBody } from "@/lib/github/parse-webhook-body";
 import {
   claimIdempotencyKeys,
   releaseIdempotencyKeys,
 } from "@/lib/github/idempotency-store";
 import { enqueuePrEventJob } from "@/lib/queue/pr-events-queue";
+import { schedulePrEventProcessing } from "@/lib/queue/schedule-pr-event-processing";
 import { verifyGitHubWebhookSignature } from "@/lib/github/webhook-signature";
 import { isRedisConfigured } from "@/lib/redis/client";
 
@@ -14,8 +16,8 @@ export const runtime = "nodejs";
  * GitHub webhook — PR lifecycle events (open, sync, review, merge, close, edit).
  *
  * - HMAC validation via GITHUB_WEBHOOK_SECRET
- * - Idempotency via Redis (delivery_id + pr_id:sha:event_type)
- * - Jobs enqueued to BullMQ (Redis)
+ * - Idempotency: delivery_id + semantic key (see lib/github/idempotency-key.ts)
+ * - Jobs enqueued to BullMQ; processing runs via embedded worker (dev/Docker) or `after()` (serverless)
  *
  * Subscribe to: pull_request, pull_request_review
  * @see https://docs.github.com/en/webhooks/webhook-events-and-payloads
@@ -46,11 +48,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (githubEvent === "ping") {
+    return NextResponse.json({ ok: true, ping: true });
+  }
+
   let payload: Record<string, unknown>;
   try {
-    payload = JSON.parse(rawBody) as Record<string, unknown>;
+    payload = parseGitHubWebhookBody(
+      rawBody,
+      req.headers.get("content-type"),
+    );
   } catch {
-    return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
   }
 
   const action = payload.action as string | undefined;
@@ -79,12 +88,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       duplicate: true,
+      layer: idempotency.layer,
       idempotency_key: idempotency.key,
     });
   }
 
   try {
     const queueJobId = await enqueuePrEventJob(job);
+    schedulePrEventProcessing(job);
     return NextResponse.json({
       ok: true,
       queued: true,
