@@ -1,5 +1,6 @@
 import { FooterAttributionLink } from "@/components/landing/footer/footer-link";
 import { FooterColumn } from "@/components/landing/footer/footer-column";
+import { FooterSocialIcons } from "@/components/landing/footer/footer-social-icons";
 import {
   FOOTER_ATTRIBUTION,
   FOOTER_COLUMNS,
@@ -7,9 +8,16 @@ import {
 import { FooterNewsletter } from "@/components/landing/footer/footer-newsletter";
 
 /**
- * LandingFooter — full-width footer for the landing page (ProductLandingPage spec).
+ * LandingFooter — full-width footer for the landing page (Issue #131)
+ *
+ * Changes vs previous stub:
+ * - FooterSocialIcons row (GitHub + Discord) with correct aria-labels and tracking
+ * - Dynamic copyright year: new Date().getFullYear()
+ * - Discord link fires both FOOTER_LINK_CLICKED and DISCORD_LINK_CLICKED
  */
 export function LandingFooter() {
+  const year = new Date().getFullYear();
+
   return (
     <footer
       id="landing-footer"
@@ -52,12 +60,19 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <div className="flex w-full justify-center">
+        {/* Bottom bar: social icons left, attribution centre, copyright right */}
+        <div className="flex w-full flex-col items-center gap-4 border-t border-white/10 pt-6 sm:flex-row sm:justify-between">
+          <FooterSocialIcons />
+
           <FooterAttributionLink
             label={FOOTER_ATTRIBUTION.label}
             href={FOOTER_ATTRIBUTION.href}
             external={FOOTER_ATTRIBUTION.external}
           />
+
+          <p className="text-xs text-white/40">
+            &copy; {year} Patch ID. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
