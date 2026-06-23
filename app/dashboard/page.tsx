@@ -200,8 +200,6 @@ export default function DashboardPage() {
   const pathname = usePathname();
   const [open, setOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(900);
 
