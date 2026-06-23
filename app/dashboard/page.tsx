@@ -8,6 +8,7 @@ import { SidebarToggle } from "@/components/sidebar-toggle";
 import { createClient } from "@/lib/supabase/client";
 import posthog from "posthog-js";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
+import { PatchIdScore } from "@/components/dashboard/patch-id-score";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -201,6 +202,17 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(900);
+
+  const scoreData = {
+    score_total: null,
+    sufficient_data: true,
+    explanation: "Your score is in the top 15% of active contributors. Keep merging clean code!",
+    checks: {
+      min_prs: true,
+      has_merged: true,
+      recency: true,
+    }
+  };
 
   useLayoutEffect(() => {
     setMounted(true);
@@ -674,12 +686,20 @@ export default function DashboardPage() {
 
       {/* Main content wrapper */}
       <main style={{
-        marginLeft: open ? 284 : 80,
-        padding: "40px 24px",
+        marginLeft: open ? 274 : 80,
+        padding: "103.5px 24px 40px 24px",
         position: "relative",
         zIndex: 2,
         transition: "margin-left 0.25s ease",
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
       }}>
+        {/* Patch ID Score Card */}
+        <PatchIdScore
+          score_total={scoreData.score_total}
+          sufficient_data={scoreData.sufficient_data}
+        />
       </main>
         </div>
       </div>
