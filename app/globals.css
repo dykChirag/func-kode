@@ -321,3 +321,34 @@
     background: rgba(255, 255, 255, 0.4);
   }
 }
+
+/* ── Dashboard background ────────────────────────────────────────────────── */
+.dashboard-outer {
+  position: relative;
+}
+
+/* Desktop/tablet (≥768px): wave img lives inside the 1920px scaled canvas */
+.dashboard-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 75% top;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 0;
+}
+
+/* Mobile (<768px): waves on the outer scroll container so they span the
+   real viewport (not inside the compressed canvas).
+   local = scrolls with content like landing page; scroll = gradient stays. */
+@media (max-width: 767px) {
+  .dashboard-canvas {
+    background: transparent !important;
+  }
+  .dashboard-bg {
+    display: none;
+  }
+}
