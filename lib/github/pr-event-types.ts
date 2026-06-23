@@ -39,7 +39,7 @@ export type PrEventJob = {
   ingested_at: string;
   /** X-GitHub-Delivery — used for idempotency */
   delivery_id: string;
-  /** Composite key: {github_pr_id}:{head_sha}:{event_type} */
+  /** Semantic idempotency key — see lib/github/idempotency-key.ts */
   idempotency_key: string;
   github_event: string;
   github_action: string;
