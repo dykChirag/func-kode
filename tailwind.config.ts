@@ -78,6 +78,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        archivo: ["var(--font-archivo)", "sans-serif"],
       },
       fontSize: {
         // Landing page typography tokens (Figma spec)
