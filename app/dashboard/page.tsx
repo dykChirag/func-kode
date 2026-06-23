@@ -8,6 +8,7 @@ import { SidebarToggle } from "@/components/sidebar-toggle";
 import { createClient } from "@/lib/supabase/client";
 import posthog from "posthog-js";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
+import { DASHBOARD_ASSETS } from "@/lib/dashboard-assets";
 import { PatchIdScore } from "@/components/dashboard/patch-id-score";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -122,9 +123,9 @@ const IcCog      = () => (
 );
 
 /* ── Sub-components ── */
-function NavItem({ icon, label, active = false, href }: { icon: React.ReactNode; label: string; active?: boolean; href?: string }) {
+function NavItem({ icon, label, active = false, href, fullWidth = false }: { icon: React.ReactNode; label: string; active?: boolean; href?: string; fullWidth?: boolean }) {
   const sharedStyle: React.CSSProperties = {
-    width: 219.5,
+    width: fullWidth ? "100%" : 219.5,
     minHeight: 54,
     alignSelf: "center",
     background: active ? "#1A1F37" : "transparent",
@@ -260,7 +261,7 @@ export default function DashboardPage() {
 
   const waveH = typeof currentInnerMinH === "number" ? Math.round(currentInnerMinH * currentScale) : 827;
   const waveW = Math.round(waveH * (1920 / 1654));
-  const mobileBg = `url('/dashboard/bg-dashboard-waves.svg') 55% top / ${waveW}px ${waveH}px no-repeat local, linear-gradient(180deg, #6325B0 0%, #0D1527 78%) local`;
+  const mobileBg = `url('${DASHBOARD_ASSETS.bgWaves}') 55% top / ${waveW}px ${waveH}px no-repeat local, linear-gradient(180deg, #6325B0 0%, #0D1527 78%) local`;
 
   return (
     <div
@@ -274,8 +275,83 @@ export default function DashboardPage() {
         background: mounted && isMobileView ? mobileBg : "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
       }}
     >
-      {/* ── Sidebar toggle ── */}
+      {/* ── Sidebar toggle (raccoon button) ── */}
       <SidebarToggle open={open} onToggle={() => setOpen(o => !o)} scale={currentScale} />
+
+      {/* ── Mobile sidebar drawer (full-size, outside canvas so it's not scaled) ── */}
+      <div
+        className="sidebar-mobile-drawer"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "min(280px, 85vw)",
+          zIndex: 9999,
+          background: "linear-gradient(180deg, #090E24 0%, #0D1527 100%)",
+          boxShadow: "4px 0 32px rgba(0,0,0,0.5)",
+          transform: open ? "translateX(0)" : "translateX(-110%)",
+          transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {/* Top spacer for raccoon toggle */}
+        <div style={{ height: 76 }} />
+
+        {/* Brand label */}
+        <div style={{ display: "flex", alignItems: "center", paddingLeft: 22, paddingBottom: 16 }}>
+          <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
+            func(kode)
+          </span>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: "rgba(224,225,226,0.2)", marginBottom: 16, marginLeft: 16, marginRight: 16 }} />
+
+        {/* Nav items */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, paddingLeft: 8, paddingRight: 8 }}>
+          <NavItem fullWidth icon={<IcHome />}      label="Dashboard"    active={pathname === "/dashboard"}   href="/dashboard" />
+          <NavItem fullWidth icon={<IcCompass />}   label="Explore"      active={pathname === "/explore"}      href="/explore" />
+          <NavItem fullWidth icon={<IcBriefcase />} label="Projects"     active={pathname === "/projects"}     href="/projects" />
+          <NavItem fullWidth icon={<IcFile />}      label="Docs"         active={pathname?.startsWith("/docs")} href="/docs" />
+
+          <SideLabel marginTop={12} marginBottom={8}>Community</SideLabel>
+          <NavItem fullWidth icon={<IcCalendar />}  label="Events"       active={pathname === "/events"}       href="/events" />
+          <NavItem fullWidth icon={<IcUsers />}     label="Discussions"  active={pathname === "/discussions"}  href="/discussions" />
+          <NavItem fullWidth icon={<IcRocket />}    label="Leader Board" active={pathname === "/leaderboard"}  href="/leaderboard" />
+
+          <SideLabel marginTop={16} marginBottom={8}>Profile</SideLabel>
+          <NavItem fullWidth icon={<IcBell />}      label="Notifications" active={pathname === "/notifications"} href="/notifications" />
+          <NavItem fullWidth icon={<IcActivity />}  label="Activity Logs" active={pathname === "/activity-logs"} href="/activity-logs" />
+          <NavItem fullWidth icon={<IcCog />}       label="Settings"      active={pathname === "/settings"}      href="/settings" />
+        </div>
+
+        {/* Bottom */}
+        <div style={{ marginTop: "auto", padding: "24px 16px 32px" }}>
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+            aria-label="Log out"
+            style={{
+              width: "100%",
+              height: 40,
+              background: "linear-gradient(180deg, #470137 0%, #DC395F 100%)",
+              border: "none",
+              borderRadius: 12,
+              cursor: "pointer",
+              color: "#FFF",
+              fontFamily: poppins.style.fontFamily,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
       <div
         style={{
@@ -309,13 +385,13 @@ export default function DashboardPage() {
         alt=""
         decoding="async"
         fetchPriority="low"
-        src="/dashboard/bg-dashboard-waves.svg"
+        src={DASHBOARD_ASSETS.bgWaves}
         className="dashboard-bg"
       />
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (desktop/tablet canvas, hidden on mobile via CSS) ── */}
       <aside
-        className={`sidebar-scrollbar ${poppins.className}`}
+        className={`sidebar-scrollbar dashboard-canvas-sidebar ${poppins.className}`}
         style={{
           position: "absolute",
           left: 10,
@@ -380,9 +456,8 @@ export default function DashboardPage() {
               </defs>
             </svg>
           </div>
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingLeft: 6 }}>
-            <Image src="/landing/logo.png" alt="func(kode)" width={40} height={36} style={{ borderRadius: 6 }} />
+          {/* Logo text — raccoon toggle (fixed, top-left) acts as the icon */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingLeft: 54 }}>
             <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
               func(kode)
             </span>
