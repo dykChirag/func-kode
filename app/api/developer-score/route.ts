@@ -52,8 +52,11 @@ export async function GET() {
       );
     }
 
+    // `data` is null (no score yet) or a row object. The `if (error)` guard
+    // above has already eliminated the GenericStringError branch, so casting
+    // via `unknown` first is the correct and type-safe pattern here.
     const score = data
-      ? mapDeveloperScoreRow(data as DeveloperLatestScoreRow)
+      ? mapDeveloperScoreRow(data as unknown as DeveloperLatestScoreRow)
       : buildEmptyDeveloperScore(user.id);
 
     return NextResponse.json(
@@ -61,7 +64,7 @@ export async function GET() {
       {
         status: 200,
         headers: {
-          // Score is personal — never share across users; revalidate frequently
+          // Score is personal — never share across users
           "Cache-Control": "private, no-store",
         },
       },
