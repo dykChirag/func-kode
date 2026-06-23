@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/navbar";
 import { AboutSection } from "@/components/landing/about-section";
 import { ContactUsSection } from "@/components/landing/contact-us-section";
+import { LandingFooter } from "@/components/landing/footer";
 import { ForDevelopersSection } from "@/components/landing/for-developers-section";
 import { ForTeamsSection } from "@/components/landing/for-teams-section";
 import { HeroSection } from "@/components/landing/hero-section";
@@ -21,7 +22,7 @@ import { useForkCount } from "@/components/site-chrome";
  *
  * Section order:
  *   HeroSection → AboutSection → HowItWorksSection → ForTeamsSection
- *   → ForDevelopersSection → ContactUsSection
+ *   → ForDevelopersSection → ContactUsSection → LandingFooter
  */
 export function LandingPageContent() {
   const forkCount = useForkCount();
@@ -37,6 +38,7 @@ export function LandingPageContent() {
       <ForTeamsSection />
       <ForDevelopersSection />
       <ContactUsSection />
+      <LandingFooter />
     </div>
   );
 }

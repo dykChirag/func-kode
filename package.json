@@ -15,7 +15,9 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "worker:pr-events": "tsx workers/process-pr-events.ts",
+    "test:webhook": "node scripts/test/test-github-webhook.mjs"
   },
   "dependencies": {
     "@opentelemetry/api-logs": "0.218.0",
@@ -30,10 +32,12 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "^2.106.2",
+    "bullmq": "^5.79.0",
     "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "ioredis": "^5.11.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.511.0",
     "next": "latest",
@@ -62,14 +66,18 @@
     "postcss": "8.5.15",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.7",
-    "wrangler": "^4.100.0"
+    "wrangler": "^4.103.0"
   },
   "overrides": {
     "postcss": "8.5.15",
     "yaml": "2.9.0",
     "esbuild": "0.28.1",
+    "bullmq": {
+      "ioredis": "$ioredis"
+    },
     "@opentelemetry/api-logs": "0.218.0",
     "@opentelemetry/exporter-logs-otlp-http": "0.218.0",
     "@opentelemetry/otlp-transformer": "0.218.0",
