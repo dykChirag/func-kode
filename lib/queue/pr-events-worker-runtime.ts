@@ -10,34 +10,43 @@ type WorkerGlobal = typeof globalThis & {
 const workerGlobal = globalThis as WorkerGlobal;
 
 /**
- * Embedded BullMQ worker can only run on long-lived Node processes (next dev, next start, Docker).
- * Serverless (Cloudflare/Vercel) uses post-response processing via `after()` instead.
+ * Whether the embedded BullMQ worker can start in this process.
+ *
+ * Rules (evaluated in order):
+ *  - Explicitly disabled → false
+ *  - Redis not configured → false
+ *  - Not a Node.js runtime → false (Edge / WASM runtimes cannot run BullMQ)
+ *  - Explicitly enabled → true
+ *  - Running in development → true
+ *  - Long-lived Node server (not a serverless function) → true
+ *  - Serverless indicator present → false
  */
 export function canRunEmbeddedPrEventsWorker(): boolean {
-  if (process.env.ENABLE_PR_EVENTS_WORKER === "false") {
+  if (process.env.ENABLE_PR_EVENTS_WORKER === "false") return false;
+  if (!isRedisConfigured()) return false;
+  if (process.env.NEXT_RUNTIME !== "nodejs") return false;
+  if (process.env.ENABLE_PR_EVENTS_WORKER === "true") return true;
+  if (process.env.NODE_ENV === "development") return true;
+
+  // Serverless platforms: Vercel Lambda, AWS Lambda, Cloudflare Workers
+  if (
+    process.env.VERCEL === "1" ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.CLOUDFLARE_WORKER
+  ) {
     return false;
   }
-  if (!isRedisConfigured()) {
-    return false;
-  }
-  if (process.env.NEXT_RUNTIME !== "nodejs") {
-    return false;
-  }
-  if (process.env.ENABLE_PR_EVENTS_WORKER === "true") {
-    return true;
-  }
-  if (process.env.NODE_ENV === "development") {
-    return true;
-  }
-  if (process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    return false;
-  }
-  return false;
+
+  // Any other long-lived Node server (Docker, Railway, Fly.io, Render) → run it
+  return true;
 }
 
-/** Start the embedded worker once per Node process (survives Next.js hot reload). */
+/** Start the embedded worker exactly once per Node process (survives Next.js hot-reload). */
 export async function startEmbeddedPrEventsWorker(): Promise<Worker | null> {
   if (!canRunEmbeddedPrEventsWorker()) {
+    console.log(
+      "[pr-events] embedded worker skipped — set ENABLE_PR_EVENTS_WORKER=true to force on this platform",
+    );
     return null;
   }
 
@@ -59,9 +68,7 @@ export async function startEmbeddedPrEventsWorker(): Promise<Worker | null> {
 
 export async function stopEmbeddedPrEventsWorker(): Promise<void> {
   const worker = workerGlobal.__prEventsWorker;
-  if (!worker) {
-    return;
-  }
+  if (!worker) return;
   await worker.close();
   workerGlobal.__prEventsWorker = undefined;
   workerGlobal.__prEventsWorkerStarting = undefined;
