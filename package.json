@@ -15,7 +15,9 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "worker:pr-events": "tsx workers/process-pr-events.ts",
+    "test:webhook": "node scripts/test/test-github-webhook.mjs"
   },
   "dependencies": {
     "@opentelemetry/api-logs": "0.218.0",
@@ -64,6 +66,7 @@
     "postcss": "8.5.15",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.7",
     "wrangler": "^4.103.0"

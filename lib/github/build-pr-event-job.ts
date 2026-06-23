@@ -1,6 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import { buildSemanticIdempotencyKey } from "@/lib/github/idempotency-key";
 import { analyzeChangedPaths } from "@/lib/github/pr-path-analysis";
-import type { PrEventJob, PrEventType } from "@/lib/github/pr-event-types";
+import type { PrEventJob } from "@/lib/github/pr-event-types";
+import {
+  isSupportedPrWebhook,
+  resolvePrEventType,
+} from "@/lib/github/pr-event-support";
+
+export { isSupportedPrWebhook as isSupportedWebhook };
 
 type GitHubUser = { login?: string };
 type GitHubLabel = { name?: string };
@@ -94,54 +101,6 @@ async function resolveDeveloperId(githubUsername: string): Promise<string | null
   return data?.id ?? null;
 }
 
-export function mapPullRequestEventType(
-  action: string,
-  merged: boolean,
-): PrEventType | null {
-  switch (action) {
-    case "opened":
-    case "reopened":
-    case "ready_for_review":
-      return "opened";
-    case "synchronize":
-      return "synchronized";
-    case "edited":
-    case "labeled":
-    case "unlabeled":
-    case "review_requested":
-    case "review_request_removed":
-      return "edited";
-    case "closed":
-      return merged ? "merged" : "closed";
-    default:
-      return null;
-  }
-}
-
-export function buildIdempotencyKey(
-  githubPrId: number,
-  headSha: string,
-  eventType: PrEventType,
-  suffix?: string,
-): string {
-  const base = `${githubPrId}:${headSha}:${eventType}`;
-  return suffix ? `${base}:${suffix}` : base;
-}
-
-export function isSupportedWebhook(
-  githubEvent: string,
-  action: string | undefined,
-  merged?: boolean,
-): boolean {
-  if (githubEvent === "pull_request_review" && action === "submitted") {
-    return true;
-  }
-  if (githubEvent === "pull_request" && action) {
-    return mapPullRequestEventType(action, merged ?? false) !== null;
-  }
-  return false;
-}
-
 async function enrichFromGitHubApi(
   repoName: string,
   prNumber: number,
@@ -212,12 +171,11 @@ export async function buildPrEventJob(params: {
     return null;
   }
 
-  let eventType: PrEventType | null = null;
-  if (githubEvent === "pull_request_review" && action === "submitted") {
-    eventType = "reviewed";
-  } else if (githubEvent === "pull_request") {
-    eventType = mapPullRequestEventType(action, pr.merged ?? false);
-  }
+  let eventType = resolvePrEventType(
+    githubEvent,
+    action,
+    pr.merged ?? false,
+  );
 
   if (!eventType) {
     return null;
@@ -264,14 +222,13 @@ export async function buildPrEventJob(params: {
     updated_at: pr.updated_at,
     ingested_at: new Date().toISOString(),
     delivery_id: deliveryId,
-    idempotency_key: buildIdempotencyKey(
-      githubPrId,
+    idempotency_key: buildSemanticIdempotencyKey({
+      githubPtId: githubPrId,
       headSha,
       eventType,
-      githubEvent === "pull_request_review"
-        ? String(payload.review?.id ?? deliveryId)
-        : undefined,
-    ),
+      deliveryId,
+      reviewId: payload.review?.id,
+    }),
     github_event: githubEvent,
     github_action: action,
   };
