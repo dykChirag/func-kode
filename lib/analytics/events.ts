@@ -11,6 +11,9 @@ export const ANALYTICS_EVENTS = {
   ANNOUNCEMENT_CTA_CLICKED: "announcement_cta_clicked",
   ANNOUNCEMENT_DISMISSED: "announcement_dismissed",
 
+  // #129
+  CONTACT_SUBMITTED: "contact_submitted",
+
   LOGIN_ATTEMPTED: "login_attempted",
   LOGIN_SUCCEEDED: "login_succeeded",
   LOGIN_FAILED: "login_failed",
