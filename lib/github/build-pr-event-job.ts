@@ -171,7 +171,7 @@ export async function buildPrEventJob(params: {
     return null;
   }
 
-  let eventType = resolvePrEventType(
+  const eventType = resolvePrEventType(
     githubEvent,
     action,
     pr.merged ?? false,

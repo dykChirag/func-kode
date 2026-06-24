@@ -33,7 +33,9 @@ export function SiteChrome({
 
   return (
     <ForkCountContext.Provider value={forkCount}>
-      {isLandingPage || isDashboard ? (
+      {isDashboard ? (
+        children
+      ) : isLandingPage ? (
         <div className="flex min-h-screen flex-col">{children}</div>
       ) : (
         <div className="flex min-h-screen flex-col">
