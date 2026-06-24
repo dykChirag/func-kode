@@ -28,10 +28,11 @@ export default function DashboardPage() {
 
   useLayoutEffect(() => {
     setMounted(true);
+    setOpen(document.documentElement.clientWidth > 960);
     const update = () => {
       const width = document.documentElement.clientWidth;
       setIsMobile(width < 768);
-      setScale(Math.min(1, width / 1920));
+      setScale(Math.max(0.5, Math.min(1, width / 1920)));
       setViewH(window.innerHeight);
     };
     update();
@@ -45,6 +46,10 @@ export default function DashboardPage() {
   const currentInnerMinH = mounted ? innerMinH : "100vh";
   const currentSidebarMaxH = mounted ? Math.min(1153, Math.ceil(viewH / scale) - 20) : 1153;
 
+  const waveH = typeof currentInnerMinH === "number" ? Math.round(currentInnerMinH * currentScale) : 827;
+  const waveW = Math.round(waveH * (1920 / 1654));
+  const mobileBg = `url('${DASHBOARD_ASSETS.bgWaves}') 55% top / ${waveW}px ${waveH}px no-repeat local, linear-gradient(180deg, #6325B0 0%, #0D1527 78%) local`;
+
   return (
     <div
       suppressHydrationWarning
@@ -53,7 +58,7 @@ export default function DashboardPage() {
         height: "100vh",
         overflowX: "hidden",
         overflowY: "auto",
-        background: "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
+        background: mounted && isMobile ? mobileBg : "linear-gradient(180deg, #6325B0 0%, #0D1527 78%)",
       }}
     >
       <DashboardSidebar
@@ -75,7 +80,7 @@ export default function DashboardPage() {
       >
         <div
           suppressHydrationWarning
-          className={jakarta.className}
+          className={`${jakarta.className} dashboard-canvas`}
           style={{
             position: "relative",
             width: 1920,

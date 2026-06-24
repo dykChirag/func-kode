@@ -9,8 +9,11 @@ interface SidebarToggleProps {
 export function SidebarToggle({ open, onToggle }: SidebarToggleProps) {
   return (
     <button
+      type="button"
       onClick={onToggle}
       aria-label="Open sidebar"
+      aria-hidden={open}
+      tabIndex={open ? -1 : 0}
       suppressHydrationWarning
       style={{
         position: "absolute",

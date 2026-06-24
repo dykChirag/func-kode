@@ -259,6 +259,7 @@ export function DashboardSidebar({
 
         <aside
           className={`sidebar-scrollbar ${poppins.className}`}
+          aria-hidden={!open}
           style={{
             position: "fixed",
             top: 0,
@@ -267,7 +268,9 @@ export function DashboardSidebar({
             width: 280,
             zIndex: 9999,
             transform: open ? "translateX(0)" : "translateX(-100%)",
-            transition: "transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+            visibility: open ? "visible" : "hidden",
+            pointerEvents: open ? "auto" : "none",
+            transition: `transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear ${open ? "0s" : "0.28s"}`,
             background: "linear-gradient(180deg, #090E24 0%, #0D1527 100%)",
             boxShadow: "4px 0 32px rgba(0,0,0,0.5)",
             display: "flex",
@@ -417,6 +420,7 @@ export function DashboardSidebar({
 
       <aside
         className={`sidebar-scrollbar ${poppins.className}`}
+        aria-hidden={!open}
         style={{
           position: "absolute",
           left: 10,
@@ -425,7 +429,9 @@ export function DashboardSidebar({
               height: sidebarMaxH,
               zIndex: 20,
               transform: open ? "translateX(0)" : "translateX(-290px)",
-              transition: "transform 0.25s ease, height 0.25s ease",
+              visibility: open ? "visible" : "hidden",
+              pointerEvents: open ? "auto" : "none",
+              transition: `transform 0.25s ease, height 0.25s ease, visibility 0s linear ${open ? "0s" : "0.25s"}`,
               borderRadius: 20,
               backdropFilter: "blur(60px)",
               WebkitBackdropFilter: "blur(60px)",

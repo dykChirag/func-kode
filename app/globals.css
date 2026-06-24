@@ -351,15 +351,5 @@
   .dashboard-bg {
     display: none;
   }
-  /* Canvas sidebar is unusable at mobile scale — use the fixed drawer instead */
-  .dashboard-canvas-sidebar {
-    display: none !important;
-  }
-}
-
-/* Mobile drawer hidden on desktop */
-@media (min-width: 768px) {
-  .sidebar-mobile-drawer {
-    display: none !important;
-  }
+  /* Sidebar visibility is handled by <DashboardSidebar mode> + the `isMobile` gate. */
 }
