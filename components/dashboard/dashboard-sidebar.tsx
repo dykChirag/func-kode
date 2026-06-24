@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Poppins } from "next/font/google";
 import { Settings } from "lucide-react";
+import { SidebarToggle } from "@/components/sidebar-toggle";
+import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -13,19 +16,30 @@ const poppins = Poppins({
   display: "swap",
 });
 
-/* ── SVG Icons ── */
+/* ── Icons ── */
 const IcHome = () => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M7.66289 2.96751C7.61927 2.92578 7.56124 2.9025 7.50088 2.9025C7.44052 2.9025 7.38248 2.92578 7.33887 2.96751L1.94531 8.11995C1.92241 8.14186 1.90418 8.16819 1.89175 8.19735C1.87931 8.2265 1.87291 8.25788 1.87295 8.28958L1.87207 13.1253C1.87207 13.374 1.97084 13.6124 2.14666 13.7882C2.32247 13.964 2.56093 14.0628 2.80957 14.0628H5.625C5.74932 14.0628 5.86855 14.0134 5.95645 13.9255C6.04436 13.8376 6.09375 13.7184 6.09375 13.5941V9.60969C6.09375 9.54753 6.11844 9.48792 6.1624 9.44396C6.20635 9.40001 6.26596 9.37532 6.32812 9.37532H8.67187C8.73403 9.37532 8.79365 9.40001 8.8376 9.44396C8.88156 9.48792 8.90625 9.54753 8.90625 9.60969V13.5941C8.90625 13.7184 8.95563 13.8376 9.04354 13.9255C9.13145 14.0134 9.25068 14.0628 9.375 14.0628H12.1893C12.4379 14.0628 12.6764 13.964 12.8522 13.7882C13.028 13.6124 13.1268 13.374 13.1268 13.1253V8.28958C13.1268 8.25788 13.1204 8.2265 13.108 8.19735C13.0955 8.16819 13.0773 8.14186 13.0544 8.11995L7.66289 2.96751Z" fill="currentColor"/>
-    <path d="M14.3824 7.15369L12.191 5.0572V1.87585C12.191 1.75153 12.1416 1.63231 12.0537 1.5444C11.9658 1.45649 11.8465 1.4071 11.7222 1.4071H10.316C10.1917 1.4071 10.0724 1.45649 9.98452 1.5444C9.89661 1.63231 9.84722 1.75153 9.84722 1.87585V2.81335L8.15035 1.19089C7.99156 1.03035 7.75543 0.938354 7.50025 0.938354C7.24596 0.938354 7.01041 1.03035 6.85162 1.19119L0.620177 7.1531C0.437951 7.32888 0.415099 7.61804 0.580919 7.80847C0.622559 7.85654 0.673545 7.89563 0.730772 7.92337C0.788 7.9511 0.850273 7.9669 0.913802 7.96981C0.977331 7.97271 1.04079 7.96266 1.10031 7.94026C1.15983 7.91787 1.21417 7.88359 1.26002 7.83952L7.33912 2.03054C7.38274 1.98882 7.44077 1.96553 7.50113 1.96553C7.56149 1.96553 7.61953 1.98882 7.66314 2.03054L13.7428 7.83952C13.8324 7.92541 13.9523 7.97228 14.0764 7.96986C14.2005 7.96745 14.3185 7.91594 14.4046 7.82663C14.5845 7.64031 14.5696 7.33269 14.3824 7.15369Z" fill="currentColor"/>
+    <g clipPath="url(#clip0_2009_746)">
+      <path d="M7.66289 2.96751C7.61927 2.92578 7.56124 2.9025 7.50088 2.9025C7.44052 2.9025 7.38248 2.92578 7.33887 2.96751L1.94531 8.11995C1.92241 8.14186 1.90418 8.16819 1.89175 8.19735C1.87931 8.2265 1.87291 8.25788 1.87295 8.28958L1.87207 13.1253C1.87207 13.374 1.97084 13.6124 2.14666 13.7882C2.32247 13.964 2.56093 14.0628 2.80957 14.0628H5.625C5.74932 14.0628 5.86855 14.0134 5.95645 13.9255C6.04436 13.8376 6.09375 13.7184 6.09375 13.5941V9.60969C6.09375 9.54753 6.11844 9.48792 6.1624 9.44396C6.20635 9.40001 6.26596 9.37532 6.32812 9.37532H8.67187C8.73403 9.37532 8.79365 9.40001 8.8376 9.44396C8.88156 9.48792 8.90625 9.54753 8.90625 9.60969V13.5941C8.90625 13.7184 8.95563 13.8376 9.04354 13.9255C9.13145 14.0134 9.25068 14.0628 9.375 14.0628H12.1893C12.4379 14.0628 12.6764 13.964 12.8522 13.7882C13.028 13.6124 13.1268 13.374 13.1268 13.1253V8.28958C13.1268 8.25788 13.1204 8.2265 13.108 8.19735C13.0955 8.16819 13.0773 8.14186 13.0544 8.11995L7.66289 2.96751Z" fill="currentColor"/>
+      <path d="M14.3824 7.15369L12.191 5.0572V1.87585C12.191 1.75153 12.1416 1.63231 12.0537 1.5444C11.9658 1.45649 11.8465 1.4071 11.7222 1.4071H10.316C10.1917 1.4071 10.0724 1.45649 9.98452 1.5444C9.89661 1.63231 9.84722 1.75153 9.84722 1.87585V2.81335L8.15035 1.19089C7.99156 1.03035 7.75543 0.938354 7.50025 0.938354C7.24596 0.938354 7.01041 1.03035 6.85162 1.19119L0.620177 7.1531C0.437951 7.32888 0.415099 7.61804 0.580919 7.80847C0.622559 7.85654 0.673545 7.89563 0.730772 7.92337C0.788 7.9511 0.850273 7.9669 0.913802 7.96981C0.977331 7.97271 1.04079 7.96266 1.10031 7.94026C1.15983 7.91787 1.21417 7.88359 1.26002 7.83952L7.33912 2.03054C7.38274 1.98882 7.44077 1.96553 7.50113 1.96553C7.56149 1.96553 7.61953 1.98882 7.66314 2.03054L13.7428 7.83952C13.8324 7.92541 13.9523 7.97228 14.0764 7.96986C14.2005 7.96745 14.3185 7.91594 14.4046 7.82663C14.5845 7.64031 14.5696 7.33269 14.3824 7.15369Z" fill="currentColor"/>
+    </g>
+    <defs>
+      <clipPath id="clip0_2009_746">
+        <rect width="15" height="15" fill="white"/>
+      </clipPath>
+    </defs>
   </svg>
 );
 
 const IcCompass = () => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g clipPath="url(#clip0_2009_738)">
-      <path d="M7.5 13.125C10.6066 13.125 13.125 10.6066 13.125 7.5C13.125 4.3934 10.6066 1.875 7.5 1.875C4.3934 1.875 1.875 4.3934 1.875 7.5C1.875 10.6066 4.3934 13.125 7.5 13.125Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M9.84375 5.15625L8.4375 8.4375L5.15625 9.84375L6.5625 6.5625L9.84375 5.15625Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <mask id="explore-needle-mask">
+      <path d="M7.26644 0.37013C11.0831 0.212225 14.3055 3.17735 14.4649 6.99391C14.6244 10.8105 11.6606 14.0341 7.84415 14.1951C4.02542 14.3563 0.799511 11.3904 0.639935 7.5716C0.480361 3.75282 3.4476 0.528128 7.26644 0.37013Z" fill="white"/>
+      <path d="M11.4129 3.38376L11.4248 3.38861C11.4477 3.47886 11.1809 3.97178 11.133 4.07754L10.4811 5.51782L9.00997 8.75511C8.82702 8.82457 8.65953 8.93114 8.48435 9.00151C8.19774 9.11662 7.93068 9.25857 7.65214 9.38382L3.67114 11.2053L3.66293 11.2032L3.65308 11.1857C3.72772 10.9811 3.85848 10.7836 3.93531 10.575C3.99562 10.4113 4.08333 10.2474 4.15619 10.0882L5.17959 7.8273L5.87895 6.28599C5.93952 6.15498 6.00745 5.94015 6.08182 5.83252C6.39141 5.65708 6.59854 5.58968 6.90821 5.44384C7.6884 5.0764 8.47518 4.72482 9.26019 4.36847L10.7849 3.671C10.9951 3.57524 11.195 3.45948 11.4129 3.38376Z" fill="black"/>
+      <path d="M7.4497 6.60546C7.82675 6.54734 8.17926 6.8066 8.23612 7.18384C8.29297 7.5611 8.0325 7.91273 7.65507 7.96831C7.27944 8.02361 6.92984 7.76467 6.87327 7.38923C6.81668 7.01379 7.07445 6.66331 7.4497 6.60546Z" fill="white"/>
+    </mask>
+    <g clipPath="url(#clip0_2009_738)" mask="url(#explore-needle-mask)">
+      <rect width="15" height="15" fill="currentColor"/>
     </g>
     <defs>
       <clipPath id="clip0_2009_738">
@@ -83,7 +97,7 @@ const IcRocket = () => (
 
 const IcBell = () => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.8931 9.99901C12.8445 9.94041 12.7968 9.88182 12.7499 9.82528C12.1054 9.04569 11.7154 8.57518 11.7154 6.36825C11.7154 5.22567 11.4421 4.28817 10.9033 3.58505C10.506 3.06561 9.96902 2.67157 9.26121 2.38036C9.2521 2.37529 9.24397 2.36864 9.23719 2.36073C8.9826 1.50819 8.28592 0.937195 7.50018 0.937195C6.71443 0.937195 6.01805 1.50819 5.76346 2.35985C5.75666 2.36748 5.74864 2.37391 5.73973 2.37889C4.08797 3.05887 3.28524 4.36346 3.28524 6.36737C3.28524 8.57518 2.89588 9.04569 2.25076 9.8244C2.20389 9.88094 2.15614 9.93836 2.1075 9.99813C1.98188 10.1496 1.90228 10.3339 1.87814 10.5293C1.854 10.7246 1.88632 10.9227 1.97127 11.1003C2.15203 11.4811 2.53729 11.7176 2.97703 11.7176H12.0265C12.4642 11.7176 12.8469 11.4814 13.028 11.1023C13.1135 10.9248 13.1461 10.7264 13.1222 10.5309C13.0983 10.3353 13.0188 10.1508 12.8931 9.99901Z" fill="currentColor"/>
+    <path d="M12.8931 9.99901C12.8445 9.94041 12.7968 9.88182 12.7499 9.82528C12.1054 9.04569 11.7154 8.57518 11.7154 6.36825C11.7154 5.22567 11.4421 4.28817 10.9033 3.58505C10.506 3.06561 9.96902 2.67157 9.26121 2.38036C9.2521 2.37529 9.24397 2.36864 9.23719 2.36073C8.9826 1.50819 8.28592 0.937195 7.50018 0.937195C6.71443 0.937195 6.01805 1.50819 5.76346 2.35985C5.75666 2.36748 5.74864 2.37391 5.73973 2.37889C4.08797 3.05887 3.28524 4.36346 3.28524 6.36737C3.28524 8.57518 2.89588 9.04569 2.25076 9.8244C2.20389 9.88094 2.15614 9.93836 2.1075 9.99813C1.98188 10.1496 1.90228 10.3339 1.87814 10.5293C1.854 10.7246 1.88632 10.9227 1.97127 11.1003C2.15203 11.4811 2.53729 11.7176 2.97703 11.7176H12.0265C12.4642 11.7176 12.8469 11.4814 13.028 11.1023C13.1135 10.9248 13.1461 10.7264 13.1222 10.5309C13.0983 10.3353 13.0188 10.1508 12.8931 9.99901V9.99901Z" fill="currentColor"/>
     <path d="M7.50007 14.0624C7.92342 14.0621 8.33878 13.9472 8.70211 13.7299C9.06543 13.5126 9.36317 13.201 9.56374 12.8282C9.57319 12.8103 9.57786 12.7903 9.57729 12.7701C9.57672 12.7701 9.57094 12.7302 9.5605 12.7129C9.55006 12.6956 9.53532 12.6812 9.51772 12.6713C9.50011 12.6614 9.48024 12.6562 9.46003 12.6562H5.54069C5.52046 12.6561 5.50055 12.6613 5.4829 12.6712C5.46526 12.6811 5.45048 12.6954 5.44001 12.7127C5.42954 12.73 5.42373 12.7498 5.42314 12.77C5.42256 12.7902 5.42723 12.8103 5.43669 12.8282C5.63724 13.2009 5.93493 13.5125 6.2982 13.7298C6.66146 13.9471 7.07677 14.062 7.50007 14.0624Z" fill="currentColor"/>
   </svg>
 );
@@ -95,28 +109,10 @@ const IcActivity = () => (
   </svg>
 );
 
-/* ── NavItem and SideLabel helpers ── */
+/* ── Sub-components ── */
 function NavItem({ icon, label, active = false, href }: { icon: React.ReactNode; label: string; active?: boolean; href?: string }) {
-  const content = (
-    <>
-      <div style={{
-        width: 30, height: 30,
-        background: active ? "#0075FF" : "#1A1F37",
-        borderRadius: 12,
-        boxShadow: "0px 3.5px 5.5px rgba(0,0,0,0.02)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: active ? "white" : "#0075FF",
-        flexShrink: 0,
-        transition: "background 0.2s, color 0.2s",
-      }}>
-        {icon}
-      </div>
-      <span style={{ fontSize: 14, fontWeight: 400, lineHeight: "100%" }}>{label}</span>
-    </>
-  );
-
   const sharedStyle: React.CSSProperties = {
-    width: "100%",
+    width: 219.5,
     minHeight: 54,
     alignSelf: "center",
     background: active ? "#1A1F37" : "transparent",
@@ -133,17 +129,52 @@ function NavItem({ icon, label, active = false, href }: { icon: React.ReactNode;
     textAlign: "left",
     textDecoration: "none",
   };
-
-  if (href) return <Link href={href} className="nav-item" style={sharedStyle}>{content}</Link>;
-  return <button className="nav-item" style={sharedStyle}>{content}</button>;
+  const content = (
+    <>
+      <div
+        className="icon-base"
+        style={{
+          width: 30,
+          height: 30,
+          background: active ? "#0075FF" : "#1A1F37",
+          borderRadius: 12,
+          boxShadow: "0px 3.5px 5.5px rgba(0, 0, 0, 0.02)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: active ? "white" : "#0075FF",
+          flexShrink: 0,
+          transition: "background 0.2s, color 0.2s",
+        }}
+      >
+        {icon}
+      </div>
+      <span style={{ fontSize: 14, fontWeight: 400, lineHeight: "100%" }}>{label}</span>
+    </>
+  );
+  if (href) {
+    return <Link href={href} className="nav-item" style={sharedStyle}>{content}</Link>;
+  }
+  return (
+    <button className="nav-item" style={sharedStyle}>
+      {content}
+    </button>
+  );
 }
 
 function SideLabel({ children, marginTop = 24, marginBottom = 12 }: { children: string; marginTop?: number; marginBottom?: number }) {
   return (
     <div style={{
-      display: "flex", width: 105, height: 18, flexDirection: "column",
-      justifyContent: "center", color: "#FFF", fontSize: 12, fontWeight: 500,
-      lineHeight: "150%", margin: `${marginTop}px 0 ${marginBottom}px 14px`,
+      display: "flex",
+      width: 105,
+      height: 18,
+      flexDirection: "column",
+      justifyContent: "center",
+      color: "#FFF",
+      fontSize: 12,
+      fontWeight: 500,
+      lineHeight: "150%",
+      margin: `${marginTop}px 0 ${marginBottom}px 14px`,
       fontFamily: poppins.style.fontFamily,
     }}>
       {children}
@@ -151,76 +182,81 @@ function SideLabel({ children, marginTop = 24, marginBottom = 12 }: { children: 
   );
 }
 
+
 export interface DashboardSidebarProps {
+  mode: "mobile" | "desktop";
   open: boolean;
-  setOpen: (open: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   isMobile: boolean;
-  handleLogout: () => void;
-  currentSidebarMaxH: number;
-  scale: number;
+  sidebarMaxH?: number;
 }
 
 export function DashboardSidebar({
+  mode,
   open,
-  setOpen,
+  onOpenChange,
   isMobile,
-  handleLogout,
-  currentSidebarMaxH,
-  scale,
+  sidebarMaxH = 1153,
 }: DashboardSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  return (
-    <>
-      {/* ── Floating raccoon toggle — shows when sidebar is closed ── */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Open sidebar"
-          suppressHydrationWarning
-          style={{
-            position: "fixed",
-            top:    isMobile ? 16 : Math.round(42 * scale),
-            left:   isMobile ? 16 : Math.round(28 * scale),
-            width:  isMobile ? 44 : Math.round(44 * scale),
-            height: isMobile ? 44 : Math.round(44 * scale),
-            zIndex: isMobile ? 10001 : 25,
-            background: "rgba(255,255,255,0.08)",
-            backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: isMobile ? 12 : Math.round(12 * scale),
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", padding: 0,
-          }}
-        >
-          <Image
-            src="/landing/logo.png" alt="func(kode)"
-            width={isMobile ? 28 : Math.round(28 * scale)}
-            height={isMobile ? 25 : Math.round(25 * scale)}
-            style={{ borderRadius: 4, display: "block" }} priority
+  const handleLogout = async () => {
+    track(ANALYTICS_EVENTS.LOGOUT);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    posthog.reset();
+    router.push("/auth/login");
+  };
+
+  if (mode === "mobile" && !isMobile) return null;
+  if (mode === "desktop" && isMobile) return null;
+
+  if (mode === "mobile") {
+    return (
+      <>
+        {!open && (
+          <button
+            onClick={() => onOpenChange(true)}
+            aria-label="Open sidebar"
+            style={{
+              position: "fixed",
+              top: 16,
+              left: 16,
+              zIndex: 10001,
+              width: 44,
+              height: 44,
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25} style={{ borderRadius: 4 }} />
+          </button>
+        )}
+
+        {open && (
+          <div
+            aria-hidden="true"
+            onClick={() => onOpenChange(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9998,
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(2px)",
+              WebkitBackdropFilter: "blur(2px)",
+            }}
           />
-        </button>
-      )}
+        )}
 
-      {/* ── Mobile Sidebar Drawer Backdrop ── */}
-      {isMobile && open && (
-        <div
-          aria-hidden="true"
-          onClick={() => setOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9998,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)",
-          }}
-        />
-      )}
-
-      {/* ── Mobile Sidebar Drawer Panel ── */}
-      {isMobile && (
         <aside
           className={`sidebar-scrollbar ${poppins.className}`}
           style={{
@@ -248,7 +284,7 @@ export function DashboardSidebar({
             flexShrink: 0,
           }}>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               aria-label="Close sidebar"
               style={{
                 width: 44, height: 44,
@@ -369,203 +405,254 @@ export function DashboardSidebar({
               </div>
             </div>
           </div>
-        </aside>
-      )}
 
-      {/* ── Desktop Sidebar Panel ── */}
-      {!isMobile && (
-        /* Outer: fixed to viewport, clips to visual size */
-        <div
-          suppressHydrationWarning
-          style={{
-            position: "fixed",
-            top:    Math.round(10 * scale),
-            left:   Math.round(10 * scale),
-            width:  Math.round(264 * scale),
-            height: Math.round(currentSidebarMaxH * scale),
-            overflow: "hidden",
-            borderRadius: Math.round(20 * scale),
-            zIndex: 20,
-            transform: open ? "translateX(0)" : `translateX(${Math.round(-290 * scale)}px)`,
-            transition: "transform 0.25s ease",
-          }}
-        >
-          {/* Inner: full canvas-coordinate size, scaled down */}
-          <div
-            className={poppins.className}
-            style={{
+        </aside>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SidebarToggle open={open} onToggle={() => onOpenChange(!open)} />
+
+      <aside
+        className={`sidebar-scrollbar ${poppins.className}`}
+        style={{
+          position: "absolute",
+          left: 10,
+              top: 10,
               width: 264,
-              height: currentSidebarMaxH,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
+              height: sidebarMaxH,
+              zIndex: 20,
+              transform: open ? "translateX(0)" : "translateX(-290px)",
+              transition: "transform 0.25s ease, height 0.25s ease",
+              borderRadius: 20,
+              backdropFilter: "blur(60px)",
+              WebkitBackdropFilter: "blur(60px)",
+              overflowY: "auto",
+              overflowX: "hidden",
+              border: "none",
+              boxShadow: "none",
             }}
           >
-            {/* Background SVG */}
-            <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-              <svg viewBox="0 0 264 1153" fill="none" xmlns="http://www.w3.org/2000/svg"
-                style={{ width: "100%", height: "100%" }} preserveAspectRatio="none">
-                <foreignObject x="-120" y="-120" width="504" height="1349">
-                  <div style={{ backdropFilter: "blur(60px)", WebkitBackdropFilter: "blur(60px)", clipPath: "url(#bgblur_0_2009_654_clip_path)", height: "100%", width: "100%" }} />
-                </foreignObject>
-                <rect width="264" height="1153" rx="20" fill="url(#paint0_linear_2009_654)" />
-                <defs>
-                  <clipPath id="bgblur_0_2009_654_clip_path" transform="translate(120 120)">
-                    <rect width="264" height="1153" rx="20" />
-                  </clipPath>
-                  <linearGradient id="paint0_linear_2009_654" x1="186.5" y1="351.743" x2="335.712" y2="365.651" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#060B26" stopOpacity="0.94" />
-                    <stop offset="1" stopColor="#1A1F37" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            {/* Header — non-scrollable */}
-            <div style={{ padding: "32px 18px 20px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0, zIndex: 1 }}>
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Close sidebar"
+            {/* Sidebar content */}
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                padding: "32px 18px 36px",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                height: 1153,
+              }}
+            >
+              {/* Exact Figma Background SVG */}
+              <div
                 style={{
-                  width: 44, height: 44, flexShrink: 0,
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", padding: 0, transition: "background 0.2s ease",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  zIndex: -1,
+                  pointerEvents: "none",
                 }}
               >
-                <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25}
-                  style={{ borderRadius: 4, display: "block" }} priority />
-              </button>
-              <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
-                func(kode)
-              </span>
-            </div>
+                <svg
+                  viewBox="0 0 264 1153"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ width: "100%", height: "100%" }}
+                  preserveAspectRatio="none"
+                >
+                  <foreignObject x="-120" y="-120" width="504" height="1349">
+                    <div style={{ backdropFilter: "blur(60px)", WebkitBackdropFilter: "blur(60px)", clipPath: "url(#bgblur_0_2009_654_clip_path)", height: "100%", width: "100%" }}></div>
+                  </foreignObject>
+                  <rect width="264" height="1153" rx="20" fill="url(#paint0_linear_2009_654)" />
+                  <defs>
+                    <clipPath id="bgblur_0_2009_654_clip_path" transform="translate(120 120)">
+                      <rect width="264" height="1153" rx="20" />
+                    </clipPath>
+                    <linearGradient id="paint0_linear_2009_654" x1="186.5" y1="351.743" x2="335.712" y2="365.651" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#060B26" stopOpacity="0.94" />
+                      <stop offset="1" stopColor="#1A1F37" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
 
-            {/* Divider — non-scrollable */}
-            <div style={{ flexShrink: 0, zIndex: 1, display: "flex", justifyContent: "center", marginBottom: 12, marginLeft: -10, marginRight: -10 }}>
-              <svg width="234" height="1" viewBox="0 0 234 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 0.5H233.25" stroke="url(#paint0_linear_2009_749_d)" />
-                <defs>
-                  <linearGradient id="paint0_linear_2009_749_d" x1="0" y1="0.5" x2="231" y2="0.5" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#E0E1E2" stopOpacity="0" />
-                    <stop offset="0.5" stopColor="#E0E1E2" />
-                    <stop offset="1" stopColor="#E0E1E2" stopOpacity="0.15625" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+              {/* Header — raccoon toggle + brand */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingLeft: 0 }}>
+                <button
+                  onClick={() => onOpenChange(false)}
+                  aria-label="Close sidebar"
+                  style={{
+                    width: 44, height: 44, flexShrink: 0,
+                    background: "rgba(255,255,255,0.08)",
+                    backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", padding: 0,
+                    transition: "background 0.2s ease",
+                  }}
+                >
+                  <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25}
+                    style={{ borderRadius: 4, display: "block" }} priority />
+                </button>
+                <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
+                  func(kode)
+                </span>
+              </div>
 
-            {/* Scrollable nav area */}
-            <div className="sidebar-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", zIndex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", padding: "0 18px" }}>
-                <NavItem icon={<IcHome />}      label="Dashboard" active={pathname === "/dashboard"} href="/dashboard" />
-                <NavItem icon={<IcCompass />}   label="Explore"   active={pathname === "/explore"}   href="/explore" />
-                <NavItem icon={<IcBriefcase />} label="Projects"  active={pathname === "/projects"}  href="/projects" />
-                <NavItem icon={<IcFile />}      label="Docs"      active={pathname === "/docs" || pathname?.startsWith("/docs")} href="/docs" />
+              {/* Divider */}
+              <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", marginLeft: -10, marginRight: -10 }}>
+                <svg width="234" height="1" viewBox="0 0 234 1" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0.5H233.25" stroke="url(#paint0_linear_2009_749)"/>
+                  <defs>
+                    <linearGradient id="paint0_linear_2009_749" x1="0" y1="0.5" x2="231" y2="0.5" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#E0E1E2" stopOpacity="0"/>
+                      <stop offset="0.5" stopColor="#E0E1E2"/>
+                      <stop offset="1" stopColor="#E0E1E2" stopOpacity="0.15625"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
 
-                <SideLabel marginTop={12} marginBottom={12}>Community</SideLabel>
-                <NavItem icon={<IcCalendar />}  label="Events"       active={pathname === "/events"}       href="/events" />
-                <NavItem icon={<IcUsers />}     label="Discussions"  active={pathname === "/discussions"}  href="/discussions" />
-                <NavItem icon={<IcRocket />}    label="Leader Board" active={pathname === "/leaderboard"} href="/leaderboard" />
+              {/* Main nav */}
+              <NavItem icon={<IcHome />}      label="Dashboard" active={pathname === "/dashboard"} href="/dashboard" />
+              <NavItem icon={<IcCompass />}   label="Explore" active={pathname === "/explore"} href="/explore" />
+              <NavItem icon={<IcBriefcase />} label="Projects" active={pathname === "/projects"} href="/projects" />
+              <NavItem icon={<IcFile />}      label="Docs" active={pathname === "/docs" || pathname?.startsWith("/docs")} href="/docs" />
 
-                <SideLabel marginTop={20} marginBottom={12}>Profile</SideLabel>
-                <NavItem icon={<IcBell />}     label="Notifications" active={pathname === "/notifications"}  href="/notifications" />
-                <NavItem icon={<IcActivity />} label="Activity Logs" active={pathname === "/activity-logs"} href="/activity-logs" />
-                <NavItem icon={<Settings size={15} />} label="Settings" active={pathname === "/settings"}  href="/settings" />
+              <SideLabel marginTop={12} marginBottom={12}>Community</SideLabel>
+              <NavItem icon={<IcCalendar />}  label="Events" active={pathname === "/events"} href="/events" />
+              <NavItem icon={<IcUsers />}     label="Discussions" active={pathname === "/discussions"} href="/discussions" />
+              <NavItem icon={<IcRocket />}    label="Leader Board" active={pathname === "/leaderboard"} href="/leaderboard" />
 
-                {/* Bottom section */}
-                <div style={{ marginTop: "auto", paddingTop: 40 }}>
-                  <button
-                    className="logout-btn"
-                    onClick={handleLogout}
-                    aria-label="Log out"
+              <SideLabel marginTop={20} marginBottom={12}>Profile</SideLabel>
+              <NavItem icon={<IcBell />}      label="Notifications" active={pathname === "/notifications"} href="/notifications" />
+              <NavItem icon={<IcActivity />}  label="Activity Logs" active={pathname === "/activity-logs"} href="/activity-logs" />
+              <NavItem icon={<Settings size={15} />} label="Settings" active={pathname === "/settings"} href="/settings" />
+
+              {/* Bottom */}
+              <div style={{ marginTop: "auto", paddingTop: 40 }}>
+                {/* Log Out Button */}
+                <button
+                  className="logout-btn"
+                  onClick={handleLogout}
+                  aria-label="Log out"
+                  style={{
+                    width: 186,
+                    height: 35,
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 40px",
+                    position: "relative",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    backdropFilter: "blur(5px)",
+                    WebkitBackdropFilter: "blur(5px)",
+                  }}
+                >
+                  <svg width="186" height="35" viewBox="0 0 186 35" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}>
+                    <g data-figma-bg-blur-radius="10">
+                      <rect width="186" height="35" rx="12" fill="url(#paint0_linear_159_198)"/>
+                    </g>
+                    <defs>
+                      <linearGradient id="paint0_linear_159_198" x1="89" y1="-6.20161e-07" x2="105.006" y2="48.6591" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#470137"/>
+                        <stop offset="1" stopColor="#DC395F"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span
                     style={{
-                      width: 186, height: 35,
-                      background: "transparent", border: "none", padding: 0,
-                      cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 61px",
-                      position: "relative", borderRadius: 12, overflow: "hidden",
-                      backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)",
+                      position: "relative",
+                      zIndex: 2,
+                      color: "#FFF",
+                      fontFamily: poppins.style.fontFamily,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      lineHeight: "100%",
                     }}
                   >
-                    <svg width="186" height="35" viewBox="0 0 186 35" fill="none" xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}>
-                      <rect width="186" height="35" rx="12" fill="url(#paint0_linear_159_198_d)" />
-                      <defs>
-                        <linearGradient id="paint0_linear_159_198_d" x1="89" y1="-6.20161e-07" x2="105.006" y2="48.6591" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#470137" />
-                          <stop offset="1" stopColor="#DC395F" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <span style={{ position: "relative", zIndex: 2, color: "#FFF", fontFamily: poppins.style.fontFamily, fontSize: 12, fontWeight: 700, lineHeight: "100%" }}>
-                      Log Out
-                    </span>
-                  </button>
+                    Log Out
+                  </span>
+                </button>
 
-                  {/* Need help card */}
-                  <div style={{ position: "relative", width: 218, height: 170, margin: "0 auto" }}>
-                    <svg width="218" height="170" viewBox="0 0 218 170" fill="none" xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true" style={{ position: "absolute", inset: 0, display: "block" }}>
-                      <rect width="218" height="169.5" rx="15" fill="url(#paint0_linear_158_2370_d)" />
-                      <mask id="mask0_158_2370_d" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="218" height="170">
-                        <rect width="218" height="169.5" rx="15" fill="#4FD1C5" />
-                      </mask>
-                      <g mask="url(#mask0_158_2370_d)" />
-                      <foreignObject x="6.00009" y="108.5" width="206" height="55">
-                        <div style={{ backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)", clipPath: "url(#bgblur_0_158_2370_clip_path_d)", height: "100%", width: "100%" }} />
-                      </foreignObject>
-                      <rect x="16.0001" y="118.5" width="186" height="35" rx="12" fill="url(#paint1_linear_158_2370_d)" />
-                      <rect x="16.4999" y="16" width="35" height="35" rx="12" fill="white" />
-                      <path d="M33.9999 24.5C29.0311 24.5 24.9999 28.5312 24.9999 33.5C24.9999 38.4687 29.0311 42.5 33.9999 42.5C38.9686 42.5 42.9999 38.4687 42.9999 33.5C42.9999 28.5312 38.9686 24.5 33.9999 24.5ZM33.7186 38.75C33.5332 38.75 33.352 38.695 33.1978 38.592C33.0436 38.489 32.9235 38.3426 32.8525 38.1713C32.7815 38 32.763 37.8115 32.7992 37.6296C32.8353 37.4477 32.9246 37.2807 33.0557 37.1496C33.1868 37.0185 33.3539 36.9292 33.5357 36.893C33.7176 36.8568 33.9061 36.8754 34.0774 36.9464C34.2487 37.0173 34.3951 37.1375 34.4981 37.2916C34.6012 37.4458 34.6561 37.6271 34.6561 37.8125C34.6561 38.0611 34.5574 38.2996 34.3816 38.4754C34.2057 38.6512 33.9673 38.75 33.7186 38.75ZM35.2861 33.9687C34.5263 34.4787 34.4218 34.9461 34.4218 35.375C34.4218 35.549 34.3526 35.716 34.2296 35.839C34.1065 35.9621 33.9396 36.0312 33.7655 36.0312C33.5915 36.0312 33.4245 35.9621 33.3015 35.839C33.1784 35.716 33.1093 35.549 33.1093 35.375C33.1093 34.348 33.5818 33.5314 34.554 32.8784C35.4577 32.2719 35.9686 31.8875 35.9686 31.0423C35.9686 30.4677 35.6405 30.0312 34.9613 29.7083C34.8015 29.6323 34.4457 29.5583 34.0079 29.5634C33.4585 29.5705 33.0319 29.7017 32.7033 29.9661C32.0836 30.4648 32.0311 31.0077 32.0311 31.0156C32.027 31.1018 32.0059 31.1863 31.9691 31.2644C31.9323 31.3424 31.8804 31.4124 31.8166 31.4704C31.7527 31.5284 31.678 31.5732 31.5968 31.6024C31.5156 31.6315 31.4294 31.6444 31.3433 31.6402C31.2571 31.6361 31.1726 31.615 31.0945 31.5782C31.0165 31.5414 30.9465 31.4895 30.8885 31.4256C30.8305 31.3618 30.7856 31.2871 30.7565 31.2059C30.7273 31.1247 30.7145 31.0385 30.7186 30.9523C30.7238 30.8384 30.803 29.8123 31.8797 28.9461C32.438 28.497 33.1482 28.2636 33.9891 28.2533C34.5844 28.2462 35.1436 28.347 35.5229 28.5261C36.6577 29.0628 37.2811 29.9577 37.2811 31.0423C37.2811 32.6281 36.2213 33.3402 35.2861 33.9687Z" fill="#0075FF" />
-                      <defs>
-                        <clipPath id="bgblur_0_158_2370_clip_path_d" transform="translate(-6.00009 -108.5)">
-                          <rect x="16.0001" y="118.5" width="186" height="35" rx="12" />
-                        </clipPath>
-                        <linearGradient id="paint0_linear_158_2370_d" x1="109" y1="0" x2="109" y2="169.5" gradientUnits="userSpaceOnUse">
-                          <stop offset="0.225962" stopColor="#2F447A" />
-                          <stop offset="0.586538" stopColor="#0E6261" />
-                          <stop offset="0.894231" stopColor="#069891" />
-                        </linearGradient>
-                        <linearGradient id="paint1_linear_158_2370_d" x1="109" y1="118.281" x2="121.066" y2="166.555" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="#060B28" stopOpacity="0.74" />
-                          <stop offset="1" stopColor="#0A0E23" stopOpacity="0.71" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div style={{ position: "absolute", top: 72, left: 16, right: 16, color: "white", fontSize: 14, fontWeight: 700, lineHeight: "140%", fontFamily: poppins.style.fontFamily }}>
-                      Need help?
-                    </div>
-                    <div style={{ position: "absolute", top: 96, left: 16, right: 16, color: "white", fontSize: 12, fontWeight: 400, lineHeight: "100%", fontFamily: poppins.style.fontFamily }}>
-                      Please check our docs
-                    </div>
-                    <div
-                      role="button" tabIndex={0} aria-label="View documentation"
-                      onClick={() => router.push("/docs")}
-                      onKeyDown={(e) => e.key === "Enter" && router.push("/docs")}
-                      className="doc-btn"
-                      style={{
-                        position: "absolute", top: 118.5, left: 16, width: 186, height: 35,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#FFF", textAlign: "center", fontFamily: poppins.style.fontFamily,
-                        fontSize: 10, fontWeight: 700, lineHeight: "100%", cursor: "pointer",
-                      }}
-                    >
-                      DOCUMENTATION
-                    </div>
+                {/* Need help card */}
+                <div style={{ position: "relative", width: 218, height: 170, margin: "0 auto" }}>
+                  <svg width="218" height="170" viewBox="0 0 218 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ position: "absolute", inset: 0, display: "block" }}>
+                    <rect width="218" height="169.5" rx="15" fill="url(#paint0_linear_158_2370)"/>
+                    <mask id="mask0_158_2370" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="218" height="170">
+                      <rect width="218" height="169.5" rx="15" fill="#4FD1C5"/>
+                    </mask>
+                    <g mask="url(#mask0_158_2370)"/>
+                    <foreignObject x="6.00009" y="108.5" width="206" height="55">
+                      <div style={{ backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)", clipPath: "url(#bgblur_0_158_2370_clip_path)", height: "100%", width: "100%" }}></div>
+                    </foreignObject>
+                    <rect x="16.0001" y="118.5" width="186" height="35" rx="12" fill="url(#paint1_linear_158_2370)"/>
+                    <rect x="16.4999" y="16" width="35" height="35" rx="12" fill="white"/>
+                    <path d="M33.9999 24.5C29.0311 24.5 24.9999 28.5312 24.9999 33.5C24.9999 38.4687 29.0311 42.5 33.9999 42.5C38.9686 42.5 42.9999 38.4687 42.9999 33.5C42.9999 28.5312 38.9686 24.5 33.9999 24.5ZM33.7186 38.75C33.5332 38.75 33.352 38.695 33.1978 38.592C33.0436 38.489 32.9235 38.3426 32.8525 38.1713C32.7815 38 32.763 37.8115 32.7992 37.6296C32.8353 37.4477 32.9246 37.2807 33.0557 37.1496C33.1868 37.0185 33.3539 36.9292 33.5357 36.893C33.7176 36.8568 33.9061 36.8754 34.0774 36.9464C34.2487 37.0173 34.3951 37.1375 34.4981 37.2916C34.6012 37.4458 34.6561 37.6271 34.6561 37.8125C34.6561 38.0611 34.5574 38.2996 34.3816 38.4754C34.2057 38.6512 33.9673 38.75 33.7186 38.75ZM35.2861 33.9687C34.5263 34.4787 34.4218 34.9461 34.4218 35.375C34.4218 35.549 34.3526 35.716 34.2296 35.839C34.1065 35.9621 33.9396 36.0312 33.7655 36.0312C33.5915 36.0312 33.4245 35.9621 33.3015 35.839C33.1784 35.716 33.1093 35.549 33.1093 35.375C33.1093 34.348 33.5818 33.5314 34.554 32.8784C35.4577 32.2719 35.9686 31.8875 35.9686 31.0423C35.9686 30.4677 35.6405 30.0312 34.9613 29.7083C34.8015 29.6323 34.4457 29.5583 34.0079 29.5634C33.4585 29.5705 33.0319 29.7017 32.7033 29.9661C32.0836 30.4648 32.0311 31.0077 32.0311 31.0156C32.027 31.1018 32.0059 31.1863 31.9691 31.2644C31.9323 31.3424 31.8804 31.4124 31.8166 31.4704C31.7527 31.5284 31.678 31.5732 31.5968 31.6024C31.5156 31.6315 31.4294 31.6444 31.3433 31.6402C31.2571 31.6361 31.1726 31.615 31.0945 31.5782C31.0165 31.5414 30.9465 31.4895 30.8885 31.4256C30.8305 31.3618 30.7856 31.2871 30.7565 31.2059C30.7273 31.1247 30.7145 31.0385 30.7186 30.9523C30.7238 30.8384 30.803 29.8123 31.8797 28.9461C32.438 28.497 33.1482 28.2636 33.9891 28.2533C34.5844 28.2462 35.1436 28.347 35.5229 28.5261C36.6577 29.0628 37.2811 29.9577 37.2811 31.0423C37.2811 32.6281 36.2213 33.3402 35.2861 33.9687Z" fill="#0075FF"/>
+                    <defs>
+                      <clipPath id="bgblur_0_158_2370_clip_path" transform="translate(-6.00009 -108.5)">
+                        <rect x="16.0001" y="118.5" width="186" height="35" rx="12"/>
+                      </clipPath>
+                      <linearGradient id="paint0_linear_158_2370" x1="109" y1="0" x2="109" y2="169.5" gradientUnits="userSpaceOnUse">
+                        <stop offset="0.225962" stopColor="#2F447A"/>
+                        <stop offset="0.586538" stopColor="#0E6261"/>
+                        <stop offset="0.894231" stopColor="#069891"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_158_2370" x1="109" y1="118.281" x2="121.066" y2="166.555" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#060B28" stopOpacity="0.74"/>
+                        <stop offset="1" stopColor="#0A0E23" stopOpacity="0.71"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div style={{ position: "absolute", top: 72, left: 16, right: 16, color: "white", fontSize: 14, fontWeight: 700, lineHeight: "140%", fontFamily: poppins.style.fontFamily }}>
+                    Need help?
+                  </div>
+                  <div style={{ position: "absolute", top: 96, left: 16, right: 16, color: "white", fontSize: 12, fontWeight: 400, lineHeight: "100%", fontFamily: poppins.style.fontFamily }}>
+                    Please check our docs
+                  </div>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label="View documentation"
+                    onClick={() => router.push("/docs")}
+                    onKeyDown={(e) => e.key === "Enter" && router.push("/docs")}
+                    className="doc-btn"
+                    style={{
+                      position: "absolute",
+                      top: 118.5,
+                      left: 16,
+                      width: 186,
+                      height: 35,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#FFF",
+                      textAlign: "center",
+                      fontFamily: poppins.style.fontFamily,
+                      fontSize: 10,
+                      fontStyle: "normal",
+                      fontWeight: 700,
+                      lineHeight: "100%",
+                      cursor: "pointer",
+                    }}
+                  >
+                    DOCUMENTATION
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </aside>
     </>
   );
 }
