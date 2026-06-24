@@ -351,4 +351,5 @@
   .dashboard-bg {
     display: none;
   }
+  /* Sidebar visibility is handled by <DashboardSidebar mode> + the `isMobile` gate. */
 }
