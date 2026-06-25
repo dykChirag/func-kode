@@ -346,10 +346,10 @@
    local = scrolls with content like landing page; scroll = gradient stays. */
 @media (max-width: 767px) {
   .dashboard-canvas {
-    background: transparent !important;
+    min-height: 1100px !important;
   }
   .dashboard-bg {
-    display: none;
+    object-position: 35% top !important;
   }
   /* Sidebar visibility is handled by <DashboardSidebar mode> + the `isMobile` gate. */
 }
