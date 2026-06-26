@@ -238,7 +238,7 @@ export function DashboardSidebar({
               padding: 0,
             }}
           >
-            <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25} style={{ borderRadius: 4 }} />
+            <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25} style={{ borderRadius: 4 }} unoptimized />
           </button>
         )}
 
@@ -297,7 +297,7 @@ export function DashboardSidebar({
                 cursor: "pointer", padding: 0,
               }}
             >
-              <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25} style={{ borderRadius: 4 }} />
+              <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25} style={{ borderRadius: 4 }} unoptimized />
             </button>
             <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
               func(kode)
@@ -504,7 +504,7 @@ export function DashboardSidebar({
                   }}
                 >
                   <Image src="/landing/logo.png" alt="func(kode)" width={28} height={25}
-                    style={{ borderRadius: 4, display: "block" }} priority />
+                    style={{ borderRadius: 4, display: "block" }} priority unoptimized />
                 </button>
                 <span style={{ fontSize: 14, fontWeight: 400, color: "white", fontFamily: poppins.style.fontFamily }}>
                   func(kode)

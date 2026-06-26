@@ -44,6 +44,7 @@ export function SidebarToggle({ open, onToggle }: SidebarToggleProps) {
         height={25}
         style={{ borderRadius: 4, display: "block" }}
         priority
+        unoptimized
       />
     </button>
   );
