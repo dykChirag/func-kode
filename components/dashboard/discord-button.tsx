@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { DISCORD_INVITE_URL } from "@/lib/landing-config";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 
 const DiscordIcon = () => (
   <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -13,9 +15,10 @@ export function DiscordButton({ iconOnly = false }: { iconOnly?: boolean }) {
 
   return (
     <a
-      href="https://discord.gg/uSECAhRet"
+      href={DISCORD_INVITE_URL}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => track(ANALYTICS_EVENTS.DISCORD_LINK_CLICKED, { source: "dashboard" })}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{

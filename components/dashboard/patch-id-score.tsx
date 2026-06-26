@@ -1,12 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { Poppins } from "next/font/google";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 interface PatchIdScoreProps {
   score_total?: number | null;
@@ -40,7 +33,7 @@ export function PatchIdScore({
 
   return (
     <div
-      className={`${poppins.className} dashboard-card`}
+      className="dashboard-card"
       style={{
         position: "relative",
         flex: "1 1 342px",
@@ -158,7 +151,6 @@ export function PatchIdScore({
         </svg>
       </button>
 
-      {/* CSS Styles for animations and hover */}
       <style jsx global>{`
         .patch-id-sync-btn:hover:not(:disabled) {
           transform: scale(1.05);
@@ -170,34 +162,6 @@ export function PatchIdScore({
         @keyframes patch-id-spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        @media (max-width: 767px) {
-          .dashboard-card {
-            max-width: 100% !important;
-            padding: 12px 10px 12px 14px !important;
-            border-radius: 16px !important;
-          }
-          .dashboard-card-title {
-            font-size: 10px !important;
-            width: 100% !important;
-          }
-          .dashboard-card-value {
-            font-size: 16px !important;
-          }
-          .dashboard-card-trend {
-            font-size: 11px !important;
-          }
-          .dashboard-card-btn {
-            width: 32px !important;
-            height: 32px !important;
-            top: 24px !important;
-            right: 10px !important;
-            border-radius: 8px !important;
-          }
-          .dashboard-card-btn svg {
-            width: 16px !important;
-            height: 16px !important;
-          }
         }
       `}</style>
     </div>

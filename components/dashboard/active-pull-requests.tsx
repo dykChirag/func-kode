@@ -1,13 +1,6 @@
 "use client";
 import React from "react";
-import { Poppins } from "next/font/google";
 import { Globe } from "lucide-react";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 interface ActivePullRequestsProps {
   count?: number;
@@ -22,7 +15,7 @@ export function ActivePullRequests({
 }: ActivePullRequestsProps) {
   return (
     <div
-      className={`${poppins.className} dashboard-card`}
+      className="dashboard-card"
       style={{
         position: "relative",
         flex: "1 1 342px",
@@ -123,37 +116,6 @@ export function ActivePullRequests({
         }
         .active-prs-btn:active {
           transform: scale(0.95);
-        }
-        .dashboard-card-trend {
-          font-size: 14px;
-        }
-        @media (max-width: 767px) {
-          .dashboard-card {
-            max-width: 100% !important;
-            padding: 12px 10px 12px 14px !important;
-            border-radius: 16px !important;
-          }
-          .dashboard-card-title {
-            font-size: 10px !important;
-            width: 100% !important;
-          }
-          .dashboard-card-value {
-            font-size: 16px !important;
-          }
-          .dashboard-card-trend {
-            font-size: 11px !important;
-          }
-          .dashboard-card-btn {
-            width: 32px !important;
-            height: 32px !important;
-            top: 24px !important;
-            right: 10px !important;
-            border-radius: 8px !important;
-          }
-          .dashboard-card-btn svg {
-            width: 16px !important;
-            height: 16px !important;
-          }
         }
       `}</style>
     </div>

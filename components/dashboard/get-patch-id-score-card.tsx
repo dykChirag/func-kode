@@ -2,13 +2,6 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Poppins } from "next/font/google";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 interface GetPatchIdScoreCardProps {
   onIconClick?: () => void;
@@ -17,7 +10,7 @@ interface GetPatchIdScoreCardProps {
 export function GetPatchIdScoreCard({ onIconClick }: GetPatchIdScoreCardProps) {
   return (
     <div
-      className={`${poppins.className} dashboard-card`}
+      className="dashboard-card"
       style={{
         position: "relative",
         flex: "1 1 342px",
@@ -112,37 +105,6 @@ export function GetPatchIdScoreCard({ onIconClick }: GetPatchIdScoreCardProps) {
         }
         .mascot-btn:active {
           transform: scale(0.95);
-        }
-        .dashboard-card-title {
-          white-space: nowrap;
-        }
-        @media (max-width: 767px) {
-          .dashboard-card {
-            max-width: 100% !important;
-            padding: 12px 50px 12px 14px !important;
-            border-radius: 16px !important;
-          }
-          .dashboard-card-title {
-            font-size: 10px !important;
-            width: 100% !important;
-            white-space: normal !important;
-            line-height: 120% !important;
-            height: auto !important;
-          }
-          .dashboard-card-action {
-            font-size: 10px !important;
-          }
-          .dashboard-card-btn {
-            width: 32px !important;
-            height: 32px !important;
-            top: 24px !important;
-            right: 10px !important;
-            border-radius: 8px !important;
-          }
-          .dashboard-card-btn img {
-            width: 18px !important;
-            height: 16px !important;
-          }
         }
       `}</style>
     </div>
