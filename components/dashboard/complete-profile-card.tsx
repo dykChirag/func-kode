@@ -249,8 +249,16 @@ export function CompleteProfileCard({
         .profile-dots-btn:hover {
           background: rgba(255, 255, 255, 0.15) !important;
         }
+        .profile-dots-btn:focus-visible {
+          outline: 2px solid #7551FF;
+          outline-offset: 2px;
+        }
         .profile-menu-item:hover {
           background: rgba(255, 255, 255, 0.08) !important;
+        }
+        .profile-menu-item:focus-visible {
+          outline: 2px solid #7551FF;
+          outline-offset: 2px;
         }
         @media (max-width: 767px) {
           .dashboard-card {

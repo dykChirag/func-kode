@@ -207,7 +207,7 @@ export function ProjectsCard({
           {/* Rows */}
           <div style={isMobile ? { maxHeight: 320, overflowY: "auto", overflowX: "hidden" } : undefined}>
           {projects.map((project, i) => (
-            <div key={i}>
+            <div key={project.name}>
               <div
                 style={{
                   display: "grid",

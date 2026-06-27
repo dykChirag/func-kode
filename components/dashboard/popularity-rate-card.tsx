@@ -136,7 +136,7 @@ export function PopularityRateCard({
             0%
           </span>
           <span style={{ fontFamily: "Poppins, sans-serif", fontSize: 28, fontWeight: 700, color: "#FFF", lineHeight: "100%" }}>
-            {percentage}%
+            {Math.max(0, Math.min(100, percentage))}%
           </span>
           <span style={{ fontFamily: "Poppins, sans-serif", fontSize: 12, fontWeight: 400, color: "var(--Gray-Gray-400, #A0AEC0)", lineHeight: "100%" }}>
             100%

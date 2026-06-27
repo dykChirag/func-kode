@@ -124,13 +124,15 @@ export function UpcomingEventsCard({ events = DEFAULT_EVENTS, isMobile = false }
         maxHeight: isMobile ? 300 : undefined,
         minHeight: 0,
       }}>
-        {events.map((ev, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {events.map((ev) => (
+          <div key={`${ev.name}-${ev.date}`} style={{ display: "flex", alignItems: "center", gap: 14 }}>
             {/* Icon */}
             <div
               style={{
                 width: 34,
                 height: 34,
+                borderRadius: 12,
+                background: ev.iconBg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

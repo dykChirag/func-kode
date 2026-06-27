@@ -103,7 +103,7 @@ export function WelcomeCard({ profile, project, metrics, eventNotice, isMobile =
           inset: 0,
           borderRadius: 20,
           overflow: "hidden",
-          background: 'url("/jellyfish.png") center right / contain no-repeat',
+          background: 'url("/jellyfish.png") center right / cover no-repeat',
           zIndex: 0,
           pointerEvents: "none",
           opacity: 0.9,

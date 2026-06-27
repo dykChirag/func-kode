@@ -26,14 +26,14 @@ export function DashboardFooter({ isMobile = false }: DashboardFooterProps) {
           fontWeight: 400,
         }}
       >
-        @ 2026, BBuilds Product Studio
+        © 2026, BBuilds Product Studio
       </span>
 
       <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 16 : 32 }}>
-        {["Patch ID", "Blog", "License"].map((label) => (
+        {[{ label: "Patch ID", href: "#" }, { label: "Blog", href: "/blog" }, { label: "License", href: "#" }].map(({ label, href }) => (
           <a
             key={label}
-            href="#"
+            href={href}
             style={{
               color: "#A0AEC0",
               fontFamily: "Poppins, sans-serif",
