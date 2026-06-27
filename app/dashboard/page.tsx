@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import { DASHBOARD_ASSETS } from "@/lib/dashboard-assets";
@@ -12,6 +12,15 @@ import { SidebarUserActions } from "@/components/dashboard/sidebar-user-actions"
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { DiscordButton } from "@/components/dashboard/discord-button";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { createClient } from "@/lib/supabase/client";
+import { WelcomeCard } from "@/components/dashboard/welcome-card";
+import { PopularityRateCard } from "@/components/dashboard/popularity-rate-card";
+import { CompleteProfileCard } from "@/components/dashboard/complete-profile-card";
+import { ContributionsChart } from "@/components/dashboard/contributions-chart";
+import { ContributorsCard } from "@/components/dashboard/contributors-card";
+import { ProjectsCard } from "@/components/dashboard/projects-card";
+import { UpcomingEventsCard } from "@/components/dashboard/upcoming-events-card";
+import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -31,7 +40,19 @@ export default function DashboardPage() {
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(900);
   const [isMobile, setIsMobile] = useState(false);
+  const [displayName, setDisplayName] = useState("there");
   const pathname = usePathname();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const name =
+        (data.user?.user_metadata?.name as string | undefined) ||
+        (data.user?.user_metadata?.full_name as string | undefined) ||
+        "";
+      if (name) setDisplayName(name);
+    });
+  }, []);
 
   // Map pathname to display title
   const getPageTitle = (path: string) => {
@@ -67,7 +88,7 @@ export default function DashboardPage() {
     setOpen(document.documentElement.clientWidth > 960);
     const update = () => {
       const width = document.documentElement.clientWidth;
-      setIsMobile(width < 768);
+      setIsMobile(width < 720);
       setScale(Math.max(0.4, Math.min(1, width / 1920)));
       setViewH(window.innerHeight);
     };
@@ -116,7 +137,7 @@ export default function DashboardPage() {
           style={{
             position: "relative",
             width: isMobile ? "100%" : 1920,
-            minHeight: isMobile ? "100vh" : currentInnerMinH,
+            minHeight: isMobile ? "auto" : currentInnerMinH,
             transformOrigin: "top left",
             transform: isMobile ? "none" : `scale(${currentScale})`,
             background: "linear-gradient(146deg, #6325B0 0%, #0D1527 62.58%)",
@@ -240,11 +261,10 @@ export default function DashboardPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: mounted 
-                  ? (isMobile 
-                      ? "repeat(2, 1fr)" 
-                      : "repeat(4, minmax(260px, 382px))"
-                    )
+                gridTemplateColumns: mounted
+                  ? (isMobile
+                      ? "repeat(2, 1fr)"
+                      : "repeat(4, minmax(260px, 382px))")
                   : "repeat(4, 1fr)",
                 gap: isMobile ? 12 : 18,
                 width: "100%",
@@ -259,6 +279,64 @@ export default function DashboardPage() {
               <EventsParticipated />
               <GetPatchIdScoreCard />
             </div>
+
+            {/* Second Row of Cards: Welcome, Popularity, Profile Onboarding */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: mounted
+                  ? (isMobile ? "1fr" : "652px 350px 1fr")
+                  : "652px 350px 1fr",
+                columnGap: isMobile ? 12 : 18,
+                rowGap: isMobile ? 12 : 18,
+                width: "100%",
+              }}
+            >
+              <div>
+                <WelcomeCard
+                  profile={{
+                    display_name: displayName,
+                    avatar_url: null,
+                    github_username: "markjohnson",
+                  }}
+                  project={{
+                    title: "distributed-db-engine",
+                    has_project: true,
+                    github_url: "",
+                  }}
+                  metrics={{
+                    contributors_this_week: 3,
+                    open_prs_count: 2,
+                  }}
+                  eventNotice="Community event tomorrow!"
+                  isMobile={isMobile}
+                />
+              </div>
+              <div>
+                <PopularityRateCard percentage={95} isMobile={isMobile} />
+              </div>
+              <div>
+                <CompleteProfileCard onboardingPercentage={75} isMobile={isMobile} />
+              </div>
+            </div>
+
+            {/* Third Row: Contributions Chart + Contributors Card */}
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 18, alignItems: "flex-start" }}>
+              <div style={{ flex: 1, minWidth: 0, width: "100%" }}>
+                <ContributionsChart moreThan={5} year={2021} isMobile={isMobile} />
+              </div>
+              <ContributorsCard increase={23} isMobile={isMobile} />
+            </div>
+
+            {/* Fourth Row: Projects + Upcoming Events */}
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, alignItems: "flex-start" }}>
+              <div style={{ flex: 1, minWidth: 0, width: "100%" }}>
+                <ProjectsCard isMobile={isMobile} />
+              </div>
+              <UpcomingEventsCard isMobile={isMobile} />
+            </div>
+
+            <DashboardFooter isMobile={isMobile} />
           </main>
         </div>
       </div>
